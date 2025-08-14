@@ -5,14 +5,40 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Agenda da Val</title>
   <style>
-    /* CSS original mantido */
-    #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; z-index: 1000; }
-    #login-form { background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); text-align: center; }
+    /* --- SEU CSS ORIGINAL --- */
+    #login-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    #login-form {
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      text-align: center;
+    }
     #login-form h2 { margin-top: 0; }
     #login-form input { padding: 10px; margin: 10px 0; width: 250px; border: 1px solid #ccc; border-radius: 4px; }
     #password-container { position: relative; }
     #password-container button { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.2rem; }
-    #login-button { background-color: #007bff; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-size: 1rem; width: 100%; }
+    #login-button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+      width: 100%;
+    }
     #login-button:hover { background-color: #0056b3; }
     #error-message { color: red; margin-top: 10px; font-size: 0.9rem; display: none; }
     * { box-sizing: border-box; }
@@ -42,9 +68,13 @@
     .commitment.checked { background-color: #d1e7ff; }
     .commitment:nth-child(even) { background-color: #f2f2f2; }
     .commitment:nth-child(even).checked { background-color: #aed6f1; }
-    .alarm-btn { margin-left: 3px; cursor: pointer; font-weight: bold; }
-    input[type="time"] { margin-left: 5px; }
+    input[type="time"] { margin-right:5px; }
+    .alarm-btn { margin-right:5px; cursor:pointer; }
+    .alarm-on { color:red; font-weight:bold; }
   </style>
+  <!-- Firebase 9.x compat -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 </head>
 <body>
   <div id="login-screen">
@@ -103,287 +133,230 @@
     </div>
   </div>
 
-  <script type="module">
-    // --- FIREBASE MODULAR ---
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-    import { getDatabase, ref, set, get, remove } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
+<script>
+  // --- CONFIGURAÇÃO FIREBASE ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyBiikcagIm1p7wJG6DsHijkvdy1fpDBn8Y",
+    authDomain: "bd-teste-c931c.firebaseapp.com",
+    databaseURL: "https://bd-teste-c931c-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "bd-teste-c931c",
+    storageBucket: "bd-teste-c931c.appspot.com",
+    messagingSenderId: "270308100761",
+    appId: "1:270308100761:web:ae34fde6d5ae86b67b0608"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCeygrkw2tQHHYy5ocBcMBnRyYvAVXRW2g",
-      authDomain: "agenda-da-val.firebaseapp.com",
-      databaseURL: "https://agenda-da-val-default-rtdb.firebaseio.com",
-      projectId: "agenda-da-val",
-      storageBucket: "agenda-da-val.appspot.com",
-      messagingSenderId: "4483197465",
-      appId: "1:4483197465:web:a31a604e5ab0a3e7021888"
-    };
+  const PASSWORD_NODE = 'appPassword';
+  const mainContent = document.getElementById('main-content');
+  const loginScreen = document.getElementById('login-screen');
+  const passwordInput = document.getElementById('password-input');
+  const errorMessage = document.getElementById('error-message');
+  const togglePasswordBtn = document.getElementById('toggle-password');
+  const setupMessage = document.getElementById('setup-message');
+  const loginTitle = document.getElementById('login-title');
 
-    const app = initializeApp(firebaseConfig);
-    const database = getDatabase(app);
+  let correctPassword = null;
 
-    // --- LÓGICA DE LOGIN MANTIDA ---
-    const PASSWORD_NODE = 'appPassword';
-    const mainContent = document.getElementById('main-content');
-    const loginScreen = document.getElementById('login-screen');
-    const passwordInput = document.getElementById('password-input');
-    const errorMessage = document.getElementById('error-message');
-    const togglePasswordBtn = document.getElementById('toggle-password');
-    const setupMessage = document.getElementById('setup-message');
-    const loginTitle = document.getElementById('login-title');
-
-    let correctPassword = null;
-
-    async function loadPassword() {
-        const snapshot = await get(ref(database, PASSWORD_NODE));
-        correctPassword = snapshot.val();
-        if (correctPassword) {
-            setupMessage.style.display = 'none';
-            loginTitle.textContent = 'Acesso Restrito';
-        } else {
-            setupMessage.style.display = 'block';
-            loginTitle.textContent = 'Configurar Senha';
-            document.getElementById('login-button').style.display = 'none';
-            passwordInput.placeholder = 'Defina uma senha';
-        }
-        loginScreen.style.display = 'flex';
+  // --- FUNÇÃO CARREGAR SENHA FIREBASE ---
+  async function loadPassword() {
+    const snapshot = await database.ref(PASSWORD_NODE).once('value');
+    correctPassword = snapshot.val();
+    if (correctPassword) {
+      setupMessage.style.display = 'none';
+      loginTitle.textContent = 'Acesso Restrito';
+      document.getElementById('login-button').style.display = 'block';
+    } else {
+      setupMessage.style.display = 'block';
+      loginTitle.textContent = 'Configurar Senha';
+      document.getElementById('login-button').style.display = 'none';
+      passwordInput.placeholder = 'Defina uma senha';
     }
+    loginScreen.style.display = 'flex';
+  }
 
-    function setPassword() {
-        const newPassword = passwordInput.value;
-        if (newPassword && newPassword.trim() !== '') {
-            set(ref(database, PASSWORD_NODE), newPassword).then(() => {
-                alert('Senha definida com sucesso!');
-                loadPassword();
-                passwordInput.value = '';
-                document.getElementById('login-button').style.display = 'block';
-                passwordInput.placeholder = 'Digite a senha';
-            }).catch(error => { alert("Erro ao salvar a senha."); console.error(error); });
-        } else { alert('A senha não pode ser vazia.'); }
+  // --- FUNÇÃO DEFINIR SENHA ---
+  function setPassword() {
+    const newPassword = passwordInput.value.trim();
+    if (!newPassword) return alert('A senha não pode ser vazia.');
+    database.ref(PASSWORD_NODE).set(newPassword).then(() => {
+      alert('Senha definida com sucesso!');
+      passwordInput.value = '';
+      loadPassword();
+    });
+  }
+
+  // --- FUNÇÃO CHECAR SENHA ---
+  function checkPassword() {
+    if (passwordInput.value === correctPassword) {
+      showMainContent();
+    } else {
+      errorMessage.style.display = 'block';
+      passwordInput.value = '';
     }
+  }
 
-    function checkPassword() {
-        const enteredPassword = passwordInput.value;
-        if (enteredPassword === correctPassword) {
-            showMainContent();
-        } else {
-            errorMessage.style.display = 'block';
-            passwordInput.value = '';
-        }
+  // --- FUNÇÃO MOSTRAR CONTEÚDO ---
+  function showMainContent() {
+    loginScreen.style.display = 'none';
+    mainContent.style.display = 'flex';
+    carregarAgenda();
+    carregarNotasFixas();
+  }
+
+  // --- TOGGLE SENHA ---
+  function togglePasswordVisibility() {
+    if (passwordInput.type==='password') {
+      passwordInput.type='text'; togglePasswordBtn.textContent='🙈';
+    } else {
+      passwordInput.type='password'; togglePasswordBtn.textContent='👁️';
     }
+  }
 
-    function showMainContent() {
-      loginScreen.style.display = 'none';
-      mainContent.style.display = 'flex';
-      carregarAgenda();
-      carregarNotasFixas();
+  // --- LOGIN COM ENTER ---
+  function handleKeyPress(e) {
+    if(e.key==='Enter'){
+      correctPassword ? checkPassword() : setPassword();
     }
+  }
 
-    function togglePasswordVisibility() {
-      if (passwordInput.type === 'password') {
-        passwordInput.type = 'text';
-        togglePasswordBtn.textContent = '🙈';
-      } else {
-        passwordInput.type = 'password';
-        togglePasswordBtn.textContent = '👁️';
+  window.addEventListener('load', loadPassword);
+
+  // --- VARIÁVEIS AGENDA ---
+  const agendaEl = document.getElementById('agenda');
+  const searchEl = document.getElementById('search');
+  const searchResultsEl = document.getElementById('searchResults');
+  const dataInput = document.getElementById('dataSelecionada');
+  const novoBtn = document.getElementById('novoBtn');
+  const copiarBtn = document.getElementById('copiarBtn');
+  const colarBtn = document.getElementById('colarBtn');
+  const exportarBtn = document.getElementById('exportarBtn');
+  const hojeBtn = document.getElementById('hojeBtn');
+  const prevDayBtn = document.getElementById('prevDayBtn');
+  const nextDayBtn = document.getElementById('nextDayBtn');
+  const notasFixasEl = document.getElementById('notasFixas');
+
+  const maxCompromissos = 20;
+  let bufferCopiados = [];
+
+  dataInput.value = new Date().toISOString().split('T')[0];
+
+  novoBtn.addEventListener('click', adicionarCompromisso);
+  copiarBtn.addEventListener('click', copiarCompromissos);
+  colarBtn.addEventListener('click', colarCompromissos);
+  exportarBtn.addEventListener('click', () => exportarParaTXT(dataInput.value));
+  hojeBtn.addEventListener('click',()=>{dataInput.value=new Date().toISOString().split('T')[0]; carregarAgenda();});
+  prevDayBtn.addEventListener('click',()=>{const d=new Date(dataInput.value);d.setDate(d.getDate()-1);dataInput.value=d.toISOString().split('T')[0];carregarAgenda();});
+  nextDayBtn.addEventListener('click',()=>{const d=new Date(dataInput.value);d.setDate(d.getDate()+1);dataInput.value=d.toISOString().split('T')[0];carregarAgenda();});
+  dataInput.addEventListener('change', carregarAgenda);
+  searchEl.addEventListener('input', pesquisarCompromisso);
+
+  let debounceTimer;
+  function salvarComDelay(){clearTimeout(debounceTimer);debounceTimer=setTimeout(()=>salvarAgenda(),1000);}
+
+  // --- FUNÇÃO CRIAR CAMPO DE COMPROMISSO ---
+  function criarCampoCompromisso(item={texto:'',hora:'',tachado:false,selecionado:false}){
+    const div=document.createElement('div'); div.className='commitment';
+    const checkbox=document.createElement('input'); checkbox.type='checkbox'; checkbox.checked=item.selecionado;
+    checkbox.addEventListener('change',()=>{div.classList.toggle('checked',checkbox.checked); salvarAgenda();});
+    if(item.selecionado) div.classList.add('checked');
+    const horaInput=document.createElement('input'); horaInput.type='time'; horaInput.value=item.hora || '';
+    horaInput.addEventListener('change', salvarComDelay);
+    const alarmBtn=document.createElement('button'); alarmBtn.textContent='🔔'; alarmBtn.className='alarm-btn';
+    if(item.alarm) alarmBtn.classList.add('alarm-on');
+    alarmBtn.onclick=()=>alarmBtn.classList.toggle('alarm-on');
+    const textoInput=document.createElement('input'); textoInput.type='text'; textoInput.value=item.texto;
+    if(item.tachado) textoInput.classList.add('done');
+    textoInput.addEventListener('input',salvarComDelay);
+    textoInput.addEventListener('keydown',e=>{if(e.key==='Enter'){const all=[...document.querySelectorAll('.commitment input[type=text]')]; const idx=all.indexOf(textoInput); const next=all[idx+1]; if(next) next.focus();}});
+    const okBtn=document.createElement('button'); okBtn.textContent='OK'; okBtn.onclick=()=>{textoInput.classList.toggle('done'); salvarAgenda();};
+    const delBtn=document.createElement('button'); delBtn.textContent='X'; delBtn.onclick=()=>{div.remove(); salvarAgenda();};
+    div.appendChild(checkbox); div.appendChild(horaInput); div.appendChild(alarmBtn); div.appendChild(textoInput); div.appendChild(okBtn); div.appendChild(delBtn);
+    return div;
+  }
+
+  function adicionarCompromisso(){
+    const compromissos=document.querySelector('.commitments');
+    if(!compromissos){
+      const section=document.createElement('div'); section.className='date-section';
+      const inner=document.createElement('div'); inner.className='commitments';
+      section.appendChild(inner); agendaEl.appendChild(section);
+    }
+    const divComp=document.querySelector('.commitments');
+    if(divComp.children.length<maxCompromissos) divComp.appendChild(criarCampoCompromisso());
+  }
+
+  async function carregarAgenda(){
+    const data=dataInput.value;
+    agendaEl.innerHTML='';
+    const section=document.createElement('div'); section.className='date-section'; section.dataset.data=data;
+    const compromissos=document.createElement('div'); compromissos.className='commitments';
+    const snapshot=await database.ref('agenda/'+data).once('value'); let dadosSalvos=snapshot.val()||[];
+    while(dadosSalvos.length<15) dadosSalvos.push({texto:'',hora:'',tachado:false,selecionado:false,alarm:false});
+    dadosSalvos.forEach(item=>compromissos.appendChild(criarCampoCompromisso(item)));
+    section.appendChild(compromissos); agendaEl.appendChild(section);
+  }
+
+  function salvarAgenda(){
+    const data=dataInput.value;
+    const section=document.querySelector('.date-section'); if(!section) return;
+    const textos=[];
+    section.querySelectorAll('.commitment').forEach(div=>{
+      const input=div.querySelector('input[type=text]');
+      const hora=div.querySelector('input[type=time]').value;
+      const alarm=div.querySelector('.alarm-btn').classList.contains('alarm-on');
+      const checkbox=div.querySelector('input[type=checkbox]');
+      textos.push({texto:input.value,hora:hora,tachado:input.classList.contains('done'),selecionado:checkbox.checked,alarm:alarm});
+    });
+    database.ref('agenda/'+data).set(textos);
+  }
+
+  // --- ALARME ---
+  setInterval(()=>{
+    const now=new Date(); const horas=now.getHours().toString().padStart(2,'0'); const minutos=now.getMinutes().toString().padStart(2,'0');
+    document.querySelectorAll('.commitment').forEach(div=>{
+      const horaInput=div.querySelector('input[type=time]');
+      const alarmBtn=div.querySelector('.alarm-btn');
+      const textoInput=div.querySelector('input[type=text]');
+      if(alarmBtn.classList.contains('alarm-on') && horaInput.value===horas+':'+minutos && textoInput.value!==''){
+        if(Notification.permission==='granted'){new Notification('Lembrete', {body:textoInput.value});}
       }
-    }
+    });
+  },60000);
+  if(Notification.permission!=='granted'){Notification.requestPermission();}
 
-    function handleKeyPress(event) {
-        if (event.key === 'Enter') {
-            if (correctPassword) { checkPassword(); }
-            else { setPassword(); }
-        }
-    }
+  // --- EXPORTAR ---
+  function exportarParaTXT(data){
+    const snapshot=document.querySelectorAll('.commitment input[type=text]');
+    let conteudo='Compromissos de '+data+'\n';
+    snapshot.forEach(inp=>{conteudo+=inp.value+'\n';});
+    const blob=new Blob([conteudo],{type:'text/plain'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='agenda-'+data+'.txt'; a.click();
+  }
 
-    window.addEventListener('load', () => { loadPassword(); });
-    // --- FIM LOGIN ---
+  // --- COPIAR / COLAR ---
+  function copiarCompromissos(){bufferCopiados=[]; document.querySelectorAll('.commitment input[type=text]').forEach(inp=>bufferCopiados.push(inp.value)); alert('Compromissos copiados!');}
+  function colarCompromissos(){if(bufferCopiados.length===0) return; document.querySelectorAll('.commitment input[type=text]').forEach((inp,i)=>{inp.value=bufferCopiados[i]||''}); salvarAgenda();}
 
-    // --- ELEMENTOS PRINCIPAIS ---
-    const agendaEl = document.getElementById('agenda');
-    const searchEl = document.getElementById('search');
-    const searchResultsEl = document.getElementById('searchResults');
-    const dataInput = document.getElementById('dataSelecionada');
-    const novoBtn = document.getElementById('novoBtn');
-    const copiarBtn = document.getElementById('copiarBtn');
-    const colarBtn = document.getElementById('colarBtn');
-    const exportarBtn = document.getElementById('exportarBtn');
-    const hojeBtn = document.getElementById('hojeBtn');
-    const prevDayBtn = document.getElementById('prevDayBtn');
-    const nextDayBtn = document.getElementById('nextDayBtn');
-    const notasFixasEl = document.getElementById('notasFixas');
+  // --- PESQUISA ---
+  function pesquisarCompromisso(){
+    const termo=searchEl.value.toLowerCase(); searchResultsEl.innerHTML='';
+    if(!termo) return;
+    document.querySelectorAll('.commitment').forEach(div=>{
+      const texto=div.querySelector('input[type=text]').value;
+      if(texto.toLowerCase().includes(termo)){
+        const res=document.createElement('div'); res.textContent=texto; searchResultsEl.appendChild(res);
+      }
+    });
+  }
 
-    const maxCompromissos = 20;
-    let bufferCopiados = [];
+  function limparBusca(){searchEl.value=''; searchResultsEl.innerHTML='';}
 
-    dataInput.value = new Date().toISOString().split('T')[0];
-    dataInput.addEventListener('change', carregarAgenda);
-    novoBtn.addEventListener('click', adicionarCompromisso);
-    copiarBtn.addEventListener('click', copiarCompromissos);
-    colarBtn.addEventListener('click', colarCompromissos);
-    exportarBtn.addEventListener('click', () => exportarParaTXT(dataInput.value));
-    hojeBtn.addEventListener('click', () => { dataInput.value = new Date().toISOString().split('T')[0]; carregarAgenda(); });
-    prevDayBtn.addEventListener('click', () => { const d = new Date(dataInput.value); d.setDate(d.getDate()-1); dataInput.value = d.toISOString().split('T')[0]; carregarAgenda(); });
-    nextDayBtn.addEventListener('click', () => { const d = new Date(dataInput.value); d.setDate(d.getDate()+1); dataInput.value = d.toISOString().split('T')[0]; carregarAgenda(); });
-    searchEl.addEventListener('input', pesquisarCompromisso);
-
-    let debounceTimer;
-    function salvarComDelay() { clearTimeout(debounceTimer); debounceTimer = setTimeout(() => salvarAgenda(), 1000); }
-
-    // --- CRIAR CAMPO DE COMPROMISSO COM HORA E ALARME ---
-    function criarCampoCompromisso(item = { texto:'', hora:'', tachado:false, selecionado:false, alarme:false }) {
-      const div = document.createElement('div');
-      div.className = 'commitment';
-
-      // Checkbox
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.checked = item.selecionado;
-      checkbox.addEventListener('change', () => { div.classList.toggle('checked', checkbox.checked); salvarAgenda(); });
-      if (item.selecionado) div.classList.add('checked');
-
-      // Input de texto
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.value = item.texto;
-      if (item.tachado) input.classList.add('done');
-      input.addEventListener('input', salvarComDelay);
-      input.addEventListener('keydown', (e) => { if(e.key==='Enter'){ const allInputs = [...document.querySelectorAll('.commitment input[type=text]')]; const idx = allInputs.indexOf(input); const next = allInputs[idx+1]; if(next) next.focus(); } });
-
-      // Input hora
-      const horaInput = document.createElement('input');
-      horaInput.type = 'time';
-      horaInput.value = item.hora || '';
-
-      // Botão OK
-      const okBtn = document.createElement('button');
-      okBtn.textContent = 'OK';
-      okBtn.onclick = () => { input.classList.toggle('done'); salvarAgenda(); };
-
-      // Botão X (Excluir)
-      const delBtn = document.createElement('button');
-      delBtn.textContent = 'X';
-      delBtn.onclick = () => { input.value=''; input.classList.remove('done'); salvarAgenda(); };
-
-      // Botão Alarme 🔔
-      const alarmBtn = document.createElement('button');
-      alarmBtn.textContent = '🔔';
-      alarmBtn.className = item.alarme ? 'alarm-btn alarm-on' : 'alarm-btn alarm-off';
-      alarmBtn.onclick = () => {
-        item.alarme = !item.alarme;
-        alarmBtn.className = item.alarme ? 'alarm-btn alarm-on' : 'alarm-btn alarm-off';
-        salvarAgenda();
-      };
-
-      div.appendChild(checkbox);
-      div.appendChild(input);
-      div.appendChild(horaInput);
-      div.appendChild(okBtn);
-      div.appendChild(delBtn);
-      div.appendChild(alarmBtn);
-
-      return div;
-    }
-
-    // --- SALVAR AGENDA ---
-    function salvarAgenda() {
-      const data = dataInput.value;
-      const section = document.querySelector('.date-section');
-      if(!section) return;
-      const textos = [];
-      section.querySelectorAll('.commitment').forEach(div => {
-        const input = div.querySelector('input[type=text]');
-        const checkbox = div.querySelector('input[type=checkbox]');
-        const horaInput = div.querySelector('input[type=time]');
-        const alarmBtn = div.querySelector('.alarm-btn');
-        textos.push({
-          texto: input.value,
-          hora: horaInput.value,
-          tachado: input.classList.contains('done'),
-          selecionado: checkbox.checked,
-          alarme: alarmBtn.classList.contains('alarm-on')
-        });
-      });
-      set(ref(database,'agenda/'+data), textos);
-    }
-
-    // --- CARREGAR AGENDA ---
-    async function carregarAgenda() {
-      const data = dataInput.value;
-      agendaEl.innerHTML='';
-      const section = document.createElement('div');
-      section.className='date-section';
-      section.dataset.data=data;
-      const compromissos = document.createElement('div');
-      compromissos.className='commitments';
-      const snapshot = await get(ref(database,'agenda/'+data));
-      let dadosSalvos = snapshot.val() || [];
-      while(dadosSalvos.length<15) dadosSalvos.push({texto:'', hora:'', tachado:false, selecionado:false, alarme:false});
-      dadosSalvos.forEach(item => compromissos.appendChild(criarCampoCompromisso(item)));
-      section.appendChild(compromissos);
-      agendaEl.appendChild(section);
-    }
-
-    // --- ADICIONAR NOVO COMPROMISSO ---
-    function adicionarCompromisso() {
-      const compromissos = document.querySelector('.commitments');
-      if(!compromissos) return;
-      if(compromissos.children.length<maxCompromissos) compromissos.appendChild(criarCampoCompromisso());
-    }
-
-    // --- VERIFICAR ALARME A CADA MINUTO ---
-    setInterval(() => {
-      const agora = new Date();
-      const horas = String(agora.getHours()).padStart(2,'0');
-      const minutos = String(agora.getMinutes()).padStart(2,'0');
-      document.querySelectorAll('.commitment').forEach(div => {
-        const horaInput = div.querySelector('input[type=time]');
-        const alarmBtn = div.querySelector('.alarm-btn');
-        const textoInput = div.querySelector('input[type=text]');
-        if(alarmBtn.classList.contains('alarm-on') && horaInput.value === `${horas}:${minutos}`) {
-          if(Notification.permission === 'granted') {
-            new Notification('Agenda', { body: textoInput.value || 'Compromisso!' });
-          }
-        }
-      });
-    },60000);
-
-    // --- PERMISSÃO NOTIFICAÇÃO ---
-    if (Notification.permission !== 'granted') Notification.requestPermission();
-
-    // --- PESQUISA ---
-    function pesquisarCompromisso() {
-      const termo = searchEl.value.toLowerCase();
-      searchResultsEl.innerHTML='';
-      document.querySelectorAll('.commitment input[type=text]').forEach(input => {
-        if(input.value.toLowerCase().includes(termo) && termo!=='') {
-          const div = document.createElement('div');
-          div.textContent = input.value;
-          div.onclick = () => { input.focus(); searchResultsEl.innerHTML=''; searchEl.value=''; };
-          searchResultsEl.appendChild(div);
-        }
-      });
-    }
-
-    function limparBusca() { searchEl.value=''; searchResultsEl.innerHTML=''; }
-
-    // --- EXPORTAR ---
-    async function exportarParaTXT(data) {
-      const snapshot = await get(ref(database,'agenda/'+data));
-      const dados = snapshot.val() || [];
-      const txt = dados.map(d=>d.texto+' '+(d.hora||'')).join('\n');
-      const blob = new Blob([txt], { type: 'text/plain' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `agenda-${data}.txt`;
-      a.click();
-    }
-
-    // --- CARREGAR NOTAS FIXAS ---
-    async function carregarNotasFixas() {
-      const snapshot = await get(ref(database,'notasFixas'));
-      notasFixasEl.value = snapshot.val() || '';
-    }
-    notasFixasEl.addEventListener('input', () => set(ref(database,'notasFixas'), notasFixasEl.value));
-  </script>
+  // --- NOTAS FIXAS ---
+  async function carregarNotasFixas(){
+    const snapshot=await database.ref('notasFixas').once('value'); notasFixasEl.value=snapshot.val()||'';
+  }
+  notasFixasEl.addEventListener('input',()=>{database.ref('notasFixas').set(notasFixasEl.value);});
+</script>
 </body>
 </html>
