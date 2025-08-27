@@ -68,7 +68,8 @@
       display: none;
     }
     /* Seu CSS original vem aqui - Nenhuma mudança necessária */
-    * { box-sizing: border-box; }    body {      margin: 0;      font-family: Arial, sans-serif;      background-color: #fff;      color: #000;    }    .container {      display: flex;      flex-direction: column;    }    @media (min-width: 768px) {      .container {        flex-direction: row;        min-height: 100vh;      }    }    .left-panel, .right-panel { padding: 20px; }    .left-panel { flex: 2; border-right: 1px solid #ccc; }    .right-panel { flex: 1; }    .calendar-section {      margin: 20px 0;      display: flex;      align-items: center;      gap: 8px;      flex-wrap: wrap;    }    .calendar-section button {      padding: 5px 10px;      font-size: 14px;      cursor: pointer;    }    .day-nav {      display: flex;      gap: 8px;      align-items: center;      margin: -10px 0 10px 0;    }    .day-nav button {      padding: 2px 8px;      font-size: 16px;      cursor: pointer;    }    .actions { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }    .search-area {      display: flex; gap: 5px; margin-bottom: 10px; align-items: center; flex-wrap: wrap;    }    .search-area input { flex: 1; padding: 5px; min-width: 120px; }    .search-results {      background-color: #fff; border: 1px solid transparent; padding: 10px; max-height: 150px; overflow-y: auto;    }    .search-results div {      cursor: pointer; padding: 4px;    }    .search-results div:hover {      background-color: #eee;    }    .destaque {      background: yellow;    }    .commitment {      display: flex;      align-items: center;      margin-bottom: 5px;      flex-wrap: wrap;      padding: 5px;    }    .commitment input[type="text"] {      flex: 1;      padding: 5px;      margin-right: 5px;      min-width: 120px;    }    .commitment button { margin-left: 3px; }    .done { text-decoration: line-through; color: gray; }    #cpfStatus.valid { color: blue; }    #cpfStatus.invalid { color: red; }    .commitment.checked {      background-color: #d1e7ff;    }    .commitment:nth-child(even) {      background-color: #f2f2f2;    }    .commitment:nth-child(even).checked {      background-color: #aed6f1;    }
+    * { box-sizing: border-box; }    body {      margin: 0;      font-family: Arial, sans-serif;      background-color: #fff;      color: #000;    }    .container {      display: flex;      flex-direction: column;    }    @media (min-width: 768px) {      .container {        flex-direction: row;        min-height: 100vh;      }    }    .left-panel, .right-panel { padding: 20px; }    .left-panel { flex: 2; border-right: 1px solid #ccc; }    .right-panel { flex: 1; }    .calendar-section {      margin: 20px 0;      display: flex;      align-items: center;      gap: 8px;      flex-wrap: wrap;    }    .calendar-section button {      padding: 5px 10px;      font-size: 14px;      cursor: pointer;    }    .day-nav {      display: flex;      gap: 8px;      align-items: center;      margin: -10px 0 10px 0;    }    .day-nav button {      padding: 2px 8px;      font-size: 16px;      cursor: pointer;    }    .actions { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }    .search-area {      display: flex; gap: 5px; margin-bottom: 10px; align-items: center; flex-wrap: wrap;    }    .search-area input { flex: 1; padding: 5px; min-width: 120px; }    .search-results {      background-color: #fff; border: 1px solid transparent; padding: 10px; max-height: 150px; overflow-y: auto;    }    .search-results div {      cursor: pointer; padding: 4px;    }    .search-results div:hover {      background-color: #eee;    }    .destaque {      background: yellow;    }    .commitment {      display: flex;      align-items: center;      margin-bottom: 5px;      flex-wrap: wrap;      padding: 5px;
+    }    .commitment input[type="text"] {      flex: 1;      padding: 5px;      margin-right: 5px;      min-width: 120px;    }    .commitment button { margin-left: 3px; }    .done { text-decoration: line-through; color: gray; }    #cpfStatus.valid { color: blue; }    #cpfStatus.invalid { color: red; }    .commitment.checked {      background-color: #d1e7ff;    }    .commitment:nth-child(even) {      background-color: #f2f2f2;    }    .commitment:nth-child(even).checked {      background-color: #aed6f1;    }
     
     /* Estilos do alarme */
     .alarm-btn {
@@ -346,20 +347,9 @@
             const alarmBtn = compromissoDiv.querySelector('.alarm-btn');
             
             alarmBtn.classList.add('active');
+            alarmBtn.dataset.alarmTime = alarmTimeInput.value;
             
-            const item = {
-                texto: compromissoDiv.querySelector('input[type="text"]').value,
-                hora: alarmTimeInput.value,
-                tachado: compromissoDiv.querySelector('input[type="text"]').classList.contains('done'),
-                selecionado: compromissoDiv.querySelector('input[type="checkbox"]').checked,
-                alarme: alarmTimeInput.value // Salva a hora do alarme
-            };
-
-            const ref = database.ref('agenda/' + data + '/' + currentAlarmIndex);
-            ref.set(item).then(() => {
-                console.log("Alarme salvo com sucesso!");
-                checkAlarms(); // Recarrega os alarmes
-            });
+            salvarAgenda();
 
             alarmModal.style.display = 'none';
         }
@@ -417,13 +407,12 @@
         const alarmBtn = div.querySelector('.alarm-btn');
         textos.push({
           texto: input.value,
-          hora: '', // O campo hora não é usado, mantive a estrutura
+          hora: '', 
           tachado: input.classList.contains('done'),
           selecionado: checkbox.checked,
           alarme: alarmBtn.classList.contains('active') ? alarmBtn.dataset.alarmTime : ''
         });
       });
-      // Salva os dados no Firebase no "caminho" agenda/ANO-MES-DIA
       database.ref('agenda/' + data).set(textos);
     }
     
@@ -510,7 +499,7 @@
       if (alarmInterval) clearInterval(alarmInterval);
       alarmInterval = setInterval(async () => {
           const dataAtual = new Date().toISOString().split('T')[0];
-          if (dataAtual !== dataInput.value) return; // Só verifica alarmes do dia atual
+          if (dataAtual !== dataInput.value) return; 
           
           const now = new Date();
           const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
@@ -536,14 +525,12 @@
                               </div>
                           `);
                           
-                          // Após fechar, o despertador volta a ser vermelho
                           newWindow.addEventListener('unload', () => {
                               alarmBtn.classList.remove('active');
                               alarmBtn.dataset.alarmTime = '';
                               salvarAgenda();
                           });
                       }
-                      // Desativa o alarme para que não dispare a cada minuto
                       alarmBtn.classList.remove('active');
                       alarmBtn.dataset.alarmTime = '';
                       salvarAgenda();
