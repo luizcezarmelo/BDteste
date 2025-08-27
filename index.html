@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Agenda da Val</title>
+  <title>Agenda do Fofo</title>
   <style>
     /* CSS para a tela de login */
     #login-screen {
@@ -68,92 +69,7 @@
       display: none;
     }
     /* Seu CSS original vem aqui - Nenhuma mudança necessária */
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background-color: #fff;
-      color: #000;
-    }
-    .container {
-      display: flex;
-      flex-direction: column;
-    }
-    @media (min-width: 768px) {
-      .container {
-        flex-direction: row;
-        min-height: 100vh;
-      }
-    }
-    .left-panel, .right-panel { padding: 20px; }
-    .left-panel { flex: 2; border-right: 1px solid #ccc; }
-    .right-panel { flex: 1; }
-    .calendar-section {
-      margin: 20px 0;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .calendar-section button {
-      padding: 5px 10px;
-      font-size: 14px;
-      cursor: pointer;
-    }
-    .day-nav {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      margin: -10px 0 10px 0;
-    }
-    .day-nav button {
-      padding: 2px 8px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    .actions { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
-    .search-area {
-      display: flex; gap: 5px; margin-bottom: 10px; align-items: center; flex-wrap: wrap;
-    }
-    .search-area input { flex: 1; padding: 5px; min-width: 120px; }
-    .search-results {
-      background-color: #fff; border: 1px solid transparent; padding: 10px; max-height: 150px; overflow-y: auto;
-    }
-    .search-results div {
-      cursor: pointer; padding: 4px;
-    }
-    .search-results div:hover {
-      background-color: #eee;
-    }
-    .destaque {
-      background: yellow;
-    }
-    .commitment {
-      display: flex;
-      align-items: center;
-      margin-bottom: 5px;
-      flex-wrap: wrap;
-      padding: 5px;
-    }
-    .commitment input[type="text"] {
-      flex: 1;
-      padding: 5px;
-      margin-right: 5px;
-      min-width: 120px;
-    }
-    .commitment button { margin-left: 3px; }
-    .done { text-decoration: line-through; color: gray; }
-    #cpfStatus.valid { color: blue; }
-    #cpfStatus.invalid { color: red; }
-    .commitment.checked {
-      background-color: #d1e7ff;
-    }
-    .commitment:nth-child(even) {
-      background-color: #f2f2f2;
-    }
-    .commitment:nth-child(even).checked {
-      background-color: #aed6f1;
-    }
+    * { box-sizing: border-box; }    body {      margin: 0;      font-family: Arial, sans-serif;      background-color: #fff;      color: #000;    }    .container {      display: flex;      flex-direction: column;    }    @media (min-width: 768px) {      .container {        flex-direction: row;        min-height: 100vh;      }    }    .left-panel, .right-panel { padding: 20px; }    .left-panel { flex: 2; border-right: 1px solid #ccc; }    .right-panel { flex: 1; }    .calendar-section {      margin: 20px 0;      display: flex;      align-items: center;      gap: 8px;      flex-wrap: wrap;    }    .calendar-section button {      padding: 5px 10px;      font-size: 14px;      cursor: pointer;    }    .day-nav {      display: flex;      gap: 8px;      align-items: center;      margin: -10px 0 10px 0;    }    .day-nav button {      padding: 2px 8px;      font-size: 16px;      cursor: pointer;    }    .actions { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }    .search-area {      display: flex; gap: 5px; margin-bottom: 10px; align-items: center; flex-wrap: wrap;    }    .search-area input { flex: 1; padding: 5px; min-width: 120px; }    .search-results {      background-color: #fff; border: 1px solid transparent; padding: 10px; max-height: 150px; overflow-y: auto;    }    .search-results div {      cursor: pointer; padding: 4px;    }    .search-results div:hover {      background-color: #eee;    }    .destaque {      background: yellow;    }    .commitment {      display: flex;      align-items: center;      margin-bottom: 5px;      flex-wrap: wrap;      padding: 5px;    }    .commitment input[type="text"] {      flex: 1;      padding: 5px;      margin-right: 5px;      min-width: 120px;    }    .commitment button { margin-left: 3px; }    .done { text-decoration: line-through; color: gray; }    #cpfStatus.valid { color: blue; }    #cpfStatus.invalid { color: red; }    .commitment.checked {      background-color: #d1e7ff;    }    .commitment:nth-child(even) {      background-color: #f2f2f2;    }    .commitment:nth-child(even).checked {      background-color: #aed6f1;    }
   </style>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -177,7 +93,7 @@
 
   <div class="container" id="main-content" style="display: none;">
     <div class="left-panel">
-      <h1>Agenda da Val</h1>
+      <h1>Agenda do Fofo</h1>
       <div class="calendar-section">
         <input type="date" id="dataSelecionada">
         <button id="hojeBtn" title="Hoje">📅</button>
@@ -195,15 +111,13 @@
       <div id="agenda"></div>
     </div>
     <div class="right-panel">
-      <div id="cpf-validator-section" style="display: none;">
-        <h2>Validador de CPF</h2>
-        <div style="display: flex; gap: 5px; flex-wrap: wrap;">
-          <input type="text" id="cpf" placeholder="Digite o CPF">
-          <button onclick="limparCPF()" title="Limpar CPF">❌</button>
-        </div>
-        <p id="cpfStatus"></p>
-        <button onclick="copiarCPF()">Copiar</button>
+      <h2>Validador de CPF</h2>
+      <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+        <input type="text" id="cpf" placeholder="Digite o CPF">
+        <button onclick="limparCPF()" title="Limpar CPF">❌</button>
       </div>
+      <p id="cpfStatus"></p>
+      <button onclick="copiarCPF()">Copiar</button>
       <h3>🔍 Pesquisa</h3>
       <div class="search-area">
         <input type="text" id="search" placeholder="Pesquisar...">
@@ -226,20 +140,21 @@
     const setupMessage = document.getElementById('setup-message');
     const loginTitle = document.getElementById('login-title');
 
-    // ** CONFIGURAÇÃO DO FIREBASE ATUALIZADA **
+    // Inicializa o Firebase (manter a sua configuração)
     const firebaseConfig = {
-        apiKey: "AIzaSyBiikcagIm1p7wJG6DsHijkvdy1fpDBn8Y",
-        authDomain: "bd-teste-c931c.firebaseapp.com",
-        databaseURL: "https://bd-teste-c931c-default-rtdb.europe-west1.firebasedatabase.app",
-        projectId: "bd-teste-c931c",
-        storageBucket: "bd-teste-c931c.appspot.com",
-        messagingSenderId: "270308100761",
-        appId: "1:270308100761:web:ae34fde6d5ae86b67b0608"
+      apiKey: "AIzaSyDQOGFiqafMZh0ha6XW62P1DpIKJE8TBYc",
+      authDomain: "agenda-online-7b71c.firebaseapp.com",
+      databaseURL: "https://agenda-online-7b71c-default-rtdb.firebaseio.com",
+      projectId: "agenda-online-7b71c",
+      storageBucket: "agenda-online-7b71c.appspot.com",
+      messagingSenderId: "28125733214",
+      appId: "1:28125733214:web:162d1cce5d14f55c24afcf"
     };
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
     let correctPassword = null;
+
     // Função para verificar a senha no Firebase
     async function loadPassword() {
         const snapshot = await database.ref(PASSWORD_NODE).once('value');
@@ -338,10 +253,15 @@
 
     const maxCompromissos = 20;
     let bufferCopiados = [];
-    const lembretesDisparados = new Set(); // Para não disparar o mesmo lembrete várias vezes
 
     /* Configuração inicial */
     dataInput.value = new Date().toISOString().split('T')[0];
+    
+    // Removido o listener de load aqui, pois o login o chama
+    // window.addEventListener('load', () => {
+    //    carregarAgenda();
+    //    carregarNotasFixas();
+    // });
 
     /* Listeners de interface */
     dataInput.addEventListener('change', carregarAgenda);
@@ -372,14 +292,13 @@
     let debounceTimer;
     function salvarComDelay() {
       clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => salvarAgenda(), 1000);
+      debounceTimer = setTimeout(() => salvarAgenda(), 1000); // Aumentei um pouco o delay para redes
     }
 
     /* Carregar agenda do dia selecionado */
     async function carregarAgenda() {
       const data = dataInput.value;
       agendaEl.innerHTML = ''; // Limpa a agenda atual
-      lembretesDisparados.clear(); // Limpa os lembretes disparados ao mudar de dia
 
       const section = document.createElement('div');
       section.className = 'date-section';
@@ -392,9 +311,9 @@
       const snapshot = await database.ref('agenda/' + data).once('value');
       let dadosSalvos = snapshot.val() || [];
 
-      while (dadosSalvos.length < 15) dadosSalvos.push({ texto: '', hora: '', tachado: false, selecionado: false, lembrete: '' });
+      while (dadosSalvos.length < 15) dadosSalvos.push({ texto: '', hora: '', tachado: false, selecionado: false });
 
-      dadosSalvos.forEach((item, index) => compromissos.appendChild(criarCampoCompromisso(item, index)));
+      dadosSalvos.forEach(item => compromissos.appendChild(criarCampoCompromisso(item)));
       section.appendChild(compromissos);
       agendaEl.appendChild(section);
     }
@@ -411,25 +330,20 @@
         const checkbox = div.querySelector('input[type=checkbox]');
         textos.push({
           texto: input.value,
-          hora: '',
+          hora: '', // O campo hora não é usado, mantive a estrutura
           tachado: input.classList.contains('done'),
-          selecionado: checkbox.checked,
-          lembrete: div.dataset.lembrete || ''
+          selecionado: checkbox.checked
         });
       });
       // Salva os dados no Firebase no "caminho" agenda/ANO-MES-DIA
       database.ref('agenda/' + data).set(textos);
     }
-
-    /* Cria um campo de compromisso */
-    function criarCampoCompromisso(item = { texto: '', hora: '', tachado: false, selecionado: false, lembrete: '' }, index) {
+    
+    /* Cria um campo de compromisso (lógica interna não muda) */
+    function criarCampoCompromisso(item = { texto: '', hora: '', tachado: false, selecionado: false }) {
       const div = document.createElement('div');
       div.className = 'commitment';
-      div.dataset.index = index; // Para identificar o lembrete
-      if (item.lembrete) {
-        div.dataset.lembrete = item.lembrete;
-      }
-
+      
       const checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
       checkbox.checked = item.selecionado;
@@ -440,12 +354,12 @@
       if (item.selecionado) {
         div.classList.add('checked');
       }
-
+      
       const input = document.createElement('input');
       input.type = 'text';
       input.value = item.texto;
       if (item.tachado) input.classList.add('done');
-
+      
       input.addEventListener('input', salvarComDelay);
       input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
@@ -455,46 +369,26 @@
           if (next) next.focus();
         }
       });
-
+      
       const okBtn = document.createElement('button');
       okBtn.textContent = 'OK';
       okBtn.onclick = () => {
         input.classList.toggle('done');
         salvarAgenda();
       };
-
+      
       const delBtn = document.createElement('button');
-      delBtn.textContent = 'X';
+      delBtn.textContent = 'Excluir';
       delBtn.onclick = () => {
         input.value = '';
         input.classList.remove('done');
-        delete div.dataset.lembrete; // Remove o lembrete também
         salvarAgenda();
       };
-
-      const lembreteBtn = document.createElement('button');
-      lembreteBtn.textContent = '⏰';
-      lembreteBtn.title = 'Definir Lembrete';
-      lembreteBtn.onclick = () => {
-          const horaAtual = div.dataset.lembrete || '12:00';
-          const horaLembrete = prompt('Definir lembrete (formato HH:MM) ou deixe em branco para remover:', horaAtual);
-          if (horaLembrete === null) return; // Cancelou
-          
-          if (horaLembrete === '') {
-              delete div.dataset.lembrete;
-          } else if (/^\d{2}:\d{2}$/.test(horaLembrete)) {
-              div.dataset.lembrete = horaLembrete;
-          } else {
-              alert('Formato de hora inválido. Use HH:MM.');
-          }
-          salvarAgenda();
-      };
-
+      
       div.appendChild(checkbox);
       div.appendChild(input);
       div.appendChild(okBtn);
       div.appendChild(delBtn);
-      div.appendChild(lembreteBtn);
       return div;
     }
 
@@ -502,7 +396,7 @@
     function adicionarCompromisso() {
       const compromissos = document.querySelector('.commitments');
       if (compromissos.children.length < maxCompromissos) {
-        compromissos.appendChild(criarCampoCompromisso({}, compromissos.children.length));
+        compromissos.appendChild(criarCampoCompromisso());
       }
     }
 
@@ -572,13 +466,13 @@
         a.download = `agenda_${data}.txt`;
         a.click();
     }
-
-    /* Funções de Copiar/Colar */
+    
+    /* Funções de Copiar/Colar (lógica interna não muda) */
     function copiarCompromissos() {
       bufferCopiados = [];
       const section = document.querySelector('.date-section');
       if (!section) return;
-
+      
       const compromissos = section.querySelectorAll('.commitment');
       compromissos.forEach(div => {
         const input = div.querySelector('input[type="text"]');
@@ -594,20 +488,20 @@
       if (!bufferCopiados.length) return;
       const compromissosDiv = document.querySelector('.commitments');
       if (!compromissosDiv) return;
-
+      
       let idxBuffer = 0;
-
+      
       function encontrarOuAdicionarCampoVazio() {
         const vazio = [...compromissosDiv.children].find(div => !div.querySelector('input[type=text]').value);
         if (vazio) return vazio;
         if (compromissosDiv.children.length < maxCompromissos) {
-          const novo = criarCampoCompromisso({}, compromissosDiv.children.length);
+          const novo = criarCampoCompromisso();
           compromissosDiv.appendChild(novo);
           return novo;
         }
         return null;
       }
-
+      
       while (idxBuffer < bufferCopiados.length) {
         const campo = encontrarOuAdicionarCampoVazio();
         if (!campo) break;
@@ -620,36 +514,8 @@
       }
       salvarAgenda();
     }
-    
-    /* ---- LÓGICA DO LEMBRETE ---- */
-    function verificarLembretes() {
-        const hoje = new Date().toISOString().split('T')[0];
-        // Só verifica se a data selecionada na agenda for o dia de hoje
-        if (dataInput.value !== hoje) {
-            return;
-        }
 
-        const agora = new Date();
-        const horaAtual = agora.getHours().toString().padStart(2, '0') + ':' + agora.getMinutes().toString().padStart(2, '0');
-
-        const compromissos = document.querySelectorAll('.commitment');
-        compromissos.forEach(div => {
-            const horaLembrete = div.dataset.lembrete;
-            const texto = div.querySelector('input[type=text]').value;
-            const idLembrete = `${dataInput.value}-${div.dataset.index}`;
-
-            // Verifica se tem lembrete, se a hora bate, se tem texto e se já não foi disparado
-            if (horaLembrete && horaLembrete === horaAtual && texto && !lembretesDisparados.has(idLembrete)) {
-                alert(`LEMBRETE: ${texto}`);
-                lembretesDisparados.add(idLembrete); // Marca como disparado
-            }
-        });
-    }
-
-    // Inicia o verificador de lembretes para rodar a cada 30 segundos
-    setInterval(verificarLembretes, 30000);
-
-    /* Funções de CPF (mantidas mas não visíveis) */
+    /* Funções de CPF (não mudam) */
     function validarCPF(cpf) {
       if (!cpf || cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
       let soma = 0, resto;
