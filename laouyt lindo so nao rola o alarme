@@ -1,70 +1,62 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Agenda do Fofo</title>
 <style>
-  *{box-sizing:border-box;}
+  * { box-sizing: border-box; }
   :root{
-    --b:#0f172a;
-    --fg:#0b1324;
-    --muted:#6b7280;
-    --bd:#e5e7eb;
-    --pri:#2563eb;
-    --pri-2:#1e40af;
-    --ok:#16a34a;
-    --warn:#ea580c;
-    --bg:#ffffff;
+    --b: #0f172a; --fg:#0b1324; --muted:#6b7280; --bd:#e5e7eb;
+    --pri:#2563eb; --pri-2:#1e40af; --ok:#16a34a; --warn:#ea580c; --bg:#ffffff;
   }
-  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue','Noto Sans',Arial,sans-serif;background:var(--bg);color:var(--fg);}
-  .container{display:flex;flex-direction:column;}
-  @media(min-width:900px){.container{flex-direction:row;min-height:100vh;}}
-  .left-panel,.right-panel{padding:20px;}
-  .left-panel{flex:2;border-right:1px solid var(--bd);}
-  .right-panel{flex:1;}
-  h1{margin:0 0 10px 0;}
-  .calendar-section{margin:12px 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
-  .day-nav{display:flex;gap:8px;align-items:center;margin:0 0 12px 0;}
-  button{cursor:pointer;border:1px solid var(--bd);background:#f8fafc;border-radius:8px;padding:8px 12px;}
-  button:hover{background:#eef2ff;}
-  .actions{display:flex;gap:10px;margin:10px 0;flex-wrap:wrap;}
-  .search-area{display:flex;gap:6px;align-items:center;margin:8px 0;flex-wrap:wrap;}
-  .search-area input{flex:1;min-width:160px;padding:8px;border:1px solid var(--bd);border-radius:6px;}
-  .search-results{border:1px solid var(--bd);border-radius:8px;max-height:220px;overflow:auto;}
-  .search-results div{padding:8px 10px;border-bottom:1px solid var(--bd);cursor:pointer;}
-  .search-results div:last-child{border-bottom:none;}
-  .search-results div:hover{background:#f1f5f9;}
-  .commitment{display:grid;grid-template-columns:92px 1fr auto auto;gap:6px;align-items:center;padding:8px;border:1px solid var(--bd);border-radius:10px;margin-bottom:8px;}
-  .commitment input[type="time"]{padding:6px;border:1px solid var(--bd);border-radius:6px;width:100%;}
-  .commitment input[type="text"]{padding:8px;border:1px solid var(--bd);border-radius:6px;width:100%;}
-  .commitment .ok{border-color:#c7f0cf;background:#ecfdf5;}
-  .commitment .del{border-color:#ffd7d7;background:#fff1f2;}
-  .done{text-decoration:line-through;color:#6b7280;}
-  .checked{background:#e7f0ff;}
-  .destaque{outline:3px solid #fde68a;background:#fffbeb;}
-  .muted{color:var(--muted);font-size:.9rem;}
-  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
-  .tag{display:inline-flex;align-items:center;gap:6px;background:#eef2ff;border:1px solid var(--bd);border-radius:999px;padding:6px 10px;font-size:.85rem;}
-  .pill{background:#ecfeff;border:1px solid #bae6fd;border-radius:999px;padding:2px 8px;font-size:.75rem;}
-  .panel{border:1px solid var(--bd);border-radius:12px;padding:12px;}
-  #login-screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#f3f4f6;z-index:1000;}
-  #login-card{background:#fff;border:1px solid var(--bd);border-radius:16px;padding:22px;box-shadow:0 10px 30px rgba(0,0,0,.08);min-width:320px;max-width:92vw;}
-  #login-card h2{margin:0 0 10px 0;}
-  #login-card input{width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;}
-  #login-card .msg{min-height:18px;font-size:.9rem;}
-  #toggle-pass{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:transparent;border:none;font-size:1rem;cursor:pointer;}
-  .relogio{font-variant-numeric:tabular-nums;}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue','Noto Sans',Arial,sans-serif;background:var(--bg);color:var(--fg)}
+  .container{display:flex;flex-direction:column}
+  @media(min-width:900px){.container{flex-direction:row;min-height:100vh}}
+  .left-panel,.right-panel{padding:20px}
+  .left-panel{flex:2;border-right:1px solid var(--bd)}
+  .right-panel{flex:1}
+  h1{margin:0 0 10px 0}
+  .calendar-section{margin:12px 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .day-nav{display:flex;gap:8px;align-items:center;margin:0 0 12px 0}
+  button{cursor:pointer;border:1px solid var(--bd);background:#f8fafc;border-radius:8px;padding:8px 12px}
+  button:hover{background:#eef2ff}
+  .actions{display:flex;gap:10px;margin:10px 0;flex-wrap:wrap}
+  .search-area{display:flex;gap:6px;align-items:center;margin:8px 0;flex-wrap:wrap}
+  .search-area input{flex:1;min-width:160px;padding:8px;border:1px solid var(--bd);border-radius:6px}
+  .search-results{border:1px solid var(--bd);border-radius:8px;max-height:220px;overflow:auto}
+  .search-results div{padding:8px 10px;border-bottom:1px solid var(--bd);cursor:pointer}
+  .search-results div:last-child{border-bottom:none}
+  .search-results div:hover{background:#f1f5f9}
+  .commitment{display:grid;grid-template-columns:92px 1fr auto auto;gap:6px;align-items:center;padding:8px;border:1px solid var(--bd);border-radius:10px;margin-bottom:8px}
+  .commitment input[type="time"]{padding:6px;border:1px solid var(--bd);border-radius:6px;width:100%}
+  .commitment input[type="text"]{padding:8px;border:1px solid var(--bd);border-radius:6px;width:100%}
+  .commitment .ok{border-color:#c7f0cf;background:#ecfdf5}
+  .commitment .del{border-color:#ffd7d7;background:#fff1f2}
+  .done{text-decoration:line-through;color:#6b7280}
+  .checked{background:#e7f0ff}
+  .destaque{outline:3px solid #fde68a;background:#fffbeb}
+  .muted{color:var(--muted);font-size:.9rem}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .tag{display:inline-flex;align-items:center;gap:6px;background:#eef2ff;border:1px solid var(--bd);border-radius:999px;padding:6px 10px;font-size:.85rem}
+  .pill{background:#ecfeff;border:1px solid #bae6fd;border-radius:999px;padding:2px 8px;font-size:.75rem}
+  .panel{border:1px solid var(--bd);border-radius:12px;padding:12px}
+  #login-screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#f3f4f6;z-index:1000}
+  #login-card{background:#fff;border:1px solid var(--bd);border-radius:16px;padding:22px;box-shadow:0 10px 30px rgba(0,0,0,.08);min-width:320px;max-width:92vw}
+  #login-card h2{margin:0 0 10px 0}
+  #login-card input{width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px}
+  #login-card .msg{min-height:18px;font-size:.9rem}
+  #toggle-pass{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:transparent;border:none;font-size:1rem;cursor:pointer}
+  .relogio{font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
-
 <div id="login-screen">
   <div id="login-card">
     <h2 id="login-title">Acesso Restrito</h2>
     <p class="muted" id="login-sub">Entre com a senha para continuar.</p>
     <div style="position:relative;margin:8px 0 6px 0">
-      <input type="password" id="password-input" placeholder="Digite a senha"/>
+      <input type="password" id="password-input" placeholder="Digite a senha" />
       <button id="toggle-pass" title="Mostrar/ocultar">👁️</button>
     </div>
     <div class="row">
@@ -83,7 +75,7 @@
       <span class="pill relogio" id="clock">--:--</span>
     </div>
     <div class="calendar-section">
-      <input type="date" id="dataSelecionada"/>
+      <input type="date" id="dataSelecionada" />
       <button id="hojeBtn" title="Hoje">📅 Hoje</button>
       <span class="tag">Auto-salvo <span id="autosaveState">a cada 5s</span></span>
     </div>
@@ -101,7 +93,7 @@
     <div class="panel" style="margin-bottom:12px">
       <h2 style="margin:0 0 8px 0">Validador de CPF</h2>
       <div class="row">
-        <input type="text" id="cpf" placeholder="Digite o CPF"/>
+        <input type="text" id="cpf" placeholder="Digite o CPF" />
         <button id="cpfClear">❌</button>
         <button id="cpfCopy">Copiar</button>
       </div>
@@ -110,7 +102,7 @@
     <div class="panel" style="margin-bottom:12px">
       <h3 style="margin:0 0 8px 0">🔍 Pesquisa global</h3>
       <div class="search-area">
-        <input type="text" id="search" placeholder="Pesquisar (min 3 letras)..."/>
+        <input type="text" id="search" placeholder="Pesquisar (min 3 letras)..." />
         <button id="limparBuscaBtn">Limpar</button>
       </div>
       <div id="searchResults" class="search-results"></div>
@@ -135,78 +127,79 @@ const firebaseConfig = {
   messagingSenderId: "270308100761",
   appId: "1:270308100761:web:ae34fde6d5ae86b67b0608"
 };
+
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 const PASSWORD_NODE = 'appPassword';
 const els = {
   loginScreen: document.getElementById('login-screen'),
-  loginTitle: document.getElementById('login-title'),
-  loginSub: document.getElementById('login-sub'),
-  passInput: document.getElementById('password-input'),
-  togglePass: document.getElementById('toggle-pass'),
-  loginBtn: document.getElementById('login-btn'),
-  defineBtn: document.getElementById('define-btn'),
-  loginErr: document.getElementById('login-error'),
-  app: document.getElementById('app')
+  loginTitle:  document.getElementById('login-title'),
+  loginSub:    document.getElementById('login-sub'),
+  passInput:   document.getElementById('password-input'),
+  togglePass:  document.getElementById('toggle-pass'),
+  loginBtn:    document.getElementById('login-btn'),
+  defineBtn:   document.getElementById('define-btn'),
+  loginErr:    document.getElementById('login-error'),
+  app:         document.getElementById('app'),
 };
+
 let currentPassword = null;
 
-async function loadPassword(){
-  try{
-    const snap = await get(child(ref(db), PASSWORD_NODE));
-    currentPassword = snap.exists() ? snap.val() : null;
-    if(currentPassword){
-      els.loginTitle.textContent='Acesso Restrito';
-      els.loginSub.textContent='Entre com a senha para continuar.';
-      els.loginBtn.style.display='';
-      els.defineBtn.style.display='none';
-    } else {
-      els.loginTitle.textContent='Configurar Senha';
-      els.loginSub.textContent='Defina uma senha para habilitar o acesso.';
-      els.loginBtn.style.display='none';
-      els.defineBtn.style.display='';
-    }
-    els.loginScreen.style.display='flex';
-  }catch(e){
-    els.loginErr.textContent='Erro ao conectar ao banco.';
+async function loadPassword() {
+  const snap = await get(child(ref(db), PASSWORD_NODE));
+  currentPassword = snap.exists() ? snap.val() : null;
+  if (currentPassword) {
+    els.loginTitle.textContent = 'Acesso Restrito';
+    els.loginSub.textContent = 'Entre com a senha para continuar.';
+    els.loginBtn.style.display = '';
+    els.defineBtn.style.display = 'none';
+  } else {
+    els.loginTitle.textContent = 'Configurar Senha';
+    els.loginSub.textContent = 'Defina uma senha para habilitar o acesso.';
+    els.loginBtn.style.display = 'none';
+    els.defineBtn.style.display = '';
   }
+  els.loginScreen.style.display = 'flex';
 }
 
-function showApp(){
-  els.loginScreen.style.display='none';
-  els.app.style.display='flex';
+function showApp() {
+  els.loginScreen.style.display = 'none';
+  els.app.style.display = 'flex';
   initApp();
 }
 
-async function setPassword(){
+async function setPassword() {
   const p = els.passInput.value.trim();
-  if(!p){ els.loginErr.textContent='A senha não pode ser vazia.'; return; }
-  await set(ref(db,PASSWORD_NODE),p);
-  els.passInput.value='';
+  if (!p) { els.loginErr.textContent = 'A senha não pode ser vazia.'; return; }
+  await set(ref(db, PASSWORD_NODE), p);
+  els.passInput.value = '';
   await loadPassword();
-  els.loginErr.textContent='Senha definida! Entre com ela para acessar.';
+  els.loginErr.textContent = 'Senha definida! Entre com ela para acessar.';
 }
 
-function checkPassword(){
+function checkPassword() {
   const p = els.passInput.value;
-  if(p && currentPassword && p===currentPassword){
+  if (p && currentPassword && p === currentPassword) {
     showApp();
   } else {
-    els.loginErr.textContent='Senha incorreta.';
+    els.loginErr.textContent = 'Senha incorreta.';
     els.passInput.select();
   }
 }
 
 els.togglePass.addEventListener('click', ()=>{ els.passInput.type = els.passInput.type==='password'?'text':'password'; });
 els.passInput.addEventListener('keydown', e=>{
-  if(e.key==='Enter'){ currentPassword ? checkPassword() : setPassword(); }
+  if(e.key==='Enter'){ currentPassword? checkPassword(): setPassword(); }
 });
 els.loginBtn.addEventListener('click', checkPassword);
 els.defineBtn.addEventListener('click', setPassword);
+
 loadPassword();
 
-/* ======================== AQUI VEM TODO O CÓDIGO DA AGENDA, CPF, NOTAS, ALARMES, PESQUISA, EXPORTAÇÃO ======================== */
+// ------------------ O restante do seu código de Agenda, CPF, Notas Fixas, etc ------------------
+// (mantém exatamente tudo como no seu código anterior, sem alterações de layout)
+
 </script>
 </body>
 </html>
