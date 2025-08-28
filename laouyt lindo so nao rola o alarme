@@ -355,7 +355,7 @@
               // focar no novo
               const novos = [...document.querySelectorAll('.commitment input[type="text"]')];
               const ultimo = novos[novos.length-1];
-              ultimo && ultimo.focus();
+              if (ultimo) ultimo.focus(); /* <- sem optional chaining */
             }
           }
         }
@@ -391,7 +391,8 @@
       marcarDirty();
       renderAgenda();
       const inputs = [...document.querySelectorAll('.commitment input[type="text"]')];
-      inputs[inputs.length-1]?.focus();
+      const last = inputs[inputs.length-1];
+      if (last) last.focus(); /* <- sem optional chaining */
     }
 
     async function exportarTXT(){
@@ -431,7 +432,7 @@
       for (const data in dados) {
         const lista = dados[data] || [];
         lista.forEach((c, idx)=>{
-          const texto = (c?.texto||'').toUpperCase();
+          const texto = ((c && c.texto) || '').toUpperCase(); /* <- sem optional chaining */
           if (texto.includes(termo)) {
             results.push({data, idx, hora: c.hora||'', texto: c.texto||''});
           }
@@ -472,7 +473,7 @@
       if ("Notification" in window && Notification.permission === "granted") {
         new Notification("Agenda do Fofo", { body: msg });
       } else {
-        alert(msg);
+        alert(msg); /* <- popup quando não há permissão */
       }
     }
 
@@ -585,8 +586,17 @@
 
       ui.notasFixas.addEventListener('input', salvarNotasFixasDebounced);
 
-      // Salva antes de sair
-      window.addEventListener('beforeunload', ()=>{ if (dirty) navigator.sendBeacon?.(db?.app?.options?.databaseURL||'/', new Blob()); });
+      // Salva antes de sair (sem optional chaining)
+      window.addEventListener('beforeunload', ()=>{
+        if (dirty) {
+          try {
+            const url = (db && db.app && db.app.options && db.app.options.databaseURL) || '/';
+            if (navigator.sendBeacon) {
+              navigator.sendBeacon(url, new Blob());
+            }
+          } catch(e) {}
+        }
+      });
 
       // Salva imediato quando a aba volta ao foco (se ficou sujo)
       window.addEventListener('focus', ()=> salvarAgenda(false));
