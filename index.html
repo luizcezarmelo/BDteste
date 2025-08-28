@@ -59,7 +59,6 @@
   </style>
 </head>
 <body>
-  <!-- LOGIN -->
   <div id="login-screen">
     <div id="login-card">
       <h2 id="login-title">Acesso Restrito</h2>
@@ -76,8 +75,6 @@
       <div class="muted" style="margin-top:8px">Dica: Enter confirma.</div>
     </div>
   </div>
-
-  <!-- APP -->
   <div class="container" id="app" style="display:none">
     <div class="left-panel">
       <div class="row" style="justify-content:space-between">
@@ -97,13 +94,13 @@
       </div>
 
       <div class="actions">
-        <button id="novoBtn">Novo compromisso</button>
+        <button id="novoBtn">Novo</button>
+        <button id="copiarCompromissosBtn">Copiar</button>
+        <button id="colarCompromissosBtn">Colar</button>
         <button id="exportarBtn">Exportar TXT</button>
       </div>
-
       <div id="agenda"></div>
     </div>
-
     <div class="right-panel">
       <div class="panel" style="margin-bottom:12px">
         <h2 style="margin:0 0 8px 0">Validador de CPF</h2>
@@ -131,7 +128,6 @@
     </div>
   </div>
 
-  <!-- Firebase + App (ESM) -->
   <script type="module">
     /************* Firebase (SDK modular via CDN) *************/
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
@@ -233,6 +229,8 @@
       agendaEl: document.getElementById('agenda'),
       dataInput: document.getElementById('dataSelecionada'),
       novoBtn: document.getElementById('novoBtn'),
+      copiarCompromissosBtn: document.getElementById('copiarCompromissosBtn'), // Novo
+      colarCompromissosBtn: document.getElementById('colarCompromissosBtn'),   // Novo
       exportarBtn: document.getElementById('exportarBtn'),
       hojeBtn: document.getElementById('hojeBtn'),
       prevDayBtn: document.getElementById('prevDayBtn'),
@@ -254,6 +252,7 @@
     let dadosDia = []; // [{hora:'',texto:'',feito:false, avisadoEm?:ts}]
     let dirty = false;
     let lastSave = 0;
+    let compromissosCopiados = []; // Para armazenar os compromissos copiados
 
     function hojeISO(){
       const d = new Date();
@@ -307,7 +306,9 @@
       if (!force && !dirty && now - lastSave < 1000) return; // evita flood
       lastSave = now;
       try{
-        await set(ref(db, `agenda/${diaAtual}`), dadosDia);
+        // Filtra compromissos vazios para não salvar lixo no banco
+        const dadosParaSalvar = dadosDia.filter(c => c.hora || c.texto);
+        await set(ref(db, `agenda/${diaAtual}`), dadosParaSalvar);
         ui.autosaveState.textContent = `OK (${new Date().toLocaleTimeString()})`;
         dirty = false;
       }catch(e){
@@ -376,9 +377,15 @@
       del.title = 'Excluir';
       del.textContent = '🗑';
       del.addEventListener('click', ()=>{
-        dadosDia.splice(idx,1);
+        // Altera para apagar o conteúdo, não a caixa de texto
+        it.hora = '';
+        it.texto = '';
+        it.feito = false;
+        it.avisadoEm = undefined; // Limpa o estado do alarme
+        txt.classList.remove('done'); // Remove o riscado
+        txt.value = '';
+        hora.value = '';
         marcarDirty();
-        renderAgenda();
       });
 
       div.append(hora, txt, ok, del);
@@ -405,6 +412,58 @@
       a.download = `agenda_${diaAtual}.txt`;
       a.click();
     }
+
+    // --- Novas funções para Copiar e Colar compromissos ---
+    function copiarCompromissos() {
+      compromissosCopiados = dadosDia.filter(c => c.texto && !c.feito)
+                                      .map(c => ({...c, feito: true, avisadoEm: undefined})); // Copia e já "risca"
+      // Marcar todos os compromissos não feitos como feitos na tela
+      dadosDia.forEach(c => {
+        if (c.texto && !c.feito) {
+          c.feito = true;
+          c.avisadoEm = undefined; // Resetar alarme para o compromisso copiado
+        }
+      });
+      marcarDirty();
+      renderAgenda();
+      alert(`Foram copiados ${compromissosCopiados.length} compromisso(s) e todos os não concluídos foram marcados como concluídos.`);
+    }
+
+    function colarCompromissos() {
+      if (compromissosCopiados.length === 0) {
+        alert('Nenhum compromisso para colar. Use o botão "Copiar" primeiro.');
+        return;
+      }
+
+      let coladosCount = 0;
+      for (const copiado of compromissosCopiados) {
+        let colou = false;
+        // Tenta colar no primeiro espaço vazio
+        for (let i = 0; i < dadosDia.length; i++) {
+          if (!dadosDia[i].texto) { // Se o texto estiver vazio
+            dadosDia[i] = { ...copiado, feito: false, avisadoEm: undefined }; // Colar como não feito e sem alarme
+            coladosCount++;
+            colou = true;
+            break;
+          }
+        }
+        // Se não hachou espaço vazio e ainda houver espaço na agenda, adiciona no final
+        if (!colou && dadosDia.length < maxCompromissos) {
+          dadosDia.push({ ...copiado, feito: false, avisadoEm: undefined });
+          coladosCount++;
+        }
+      }
+      if (coladosCount > 0) {
+        marcarDirty();
+        renderAgenda();
+        alert(`Colados ${coladosCount} compromisso(s).`);
+      } else {
+        alert('Não foi possível colar os compromissos. A agenda está cheia ou não há espaços vazios.');
+      }
+      compromissosCopiados = []; // Limpa a área de transferência após colar
+    }
+    // --- Fim das novas funções ---
+
 
     /************* Pesquisa Global *************/
     let searchTimer=null;
@@ -461,70 +520,82 @@
     }
 
     /************* Alarmes *************/
-    function pedirPermissaoNotif(){
-      if (!("Notification" in window)) return;
-      if (Notification.permission === "default") {
-        Notification.requestPermission().catch(()=>{});
-      }
-    }
-
+    // Alterado para mostrar pop-up com botão OK
     function notificar(msg){
-      if ("Notification" in window && Notification.permission === "granted") {
-        new Notification("Agenda do Fofo", { body: msg });
-      } else {
-        alert(msg);
-      }
+      // Não precisa de permissão de notificação do navegador para alert
+      const alarmPopup = document.createElement('div');
+      alarmPopup.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 20px;
+        border: 1px solid var(--bd);
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        z-index: 2000;
+        text-align: center;
+        max-width: 90vw;
+      `;
+      alarmPopup.innerHTML = `
+        <p style="margin:0 0 15px 0; font-size:1.1rem; font-weight:bold;">🚨 Lembrete da Agenda 🚨</p>
+        <p style="margin:0 0 20px 0;">${msg}</p>
+        <button style="background: var(--pri); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">OK</button>
+      `;
+      document.body.appendChild(alarmPopup);
+
+      alarmPopup.querySelector('button').addEventListener('click', () => {
+        document.body.removeChild(alarmPopup);
+      });
     }
 
     async function checarAlarmes(){
       const hoje = hojeISO();
       const now = new Date();
-      if (ui.dataInput.value !== hoje) {
-        // mesmo que a tela esteja em outro dia, alarme considera apenas HOJE
-        const snap = await get(child(ref(db), `agenda/${hoje}`));
-        if (!snap.exists()) return;
-        const lista = snap.val() || [];
-        let houveAlteracao = false;
-        for (let i=0;i<lista.length;i++){
-          const c = lista[i];
-          if (!c || !c.hora || !c.texto) continue;
-          const [h,m] = (c.hora||'').split(':').map(x=>parseInt(x,10));
-          if (Number.isNaN(h) || Number.isNaN(m)) continue;
-          const comp = new Date();
-          comp.setHours(h,m,0,0);
-          const jaAvisado = !!c.avisadoEm;
-          if (!jaAvisado && comp.getTime() <= now.getTime()) {
-            notificar(`Lembrete (${c.hora}): ${c.texto}`);
-            c.avisadoEm = Date.now();
-            lista[i] = c;
-            houveAlteracao = true;
-          }
+      now.setSeconds(0,0); // Ignora segundos para comparação de alarme
+      
+      // Busca agenda do dia atual, esteja ou não na tela
+      const snap = await get(child(ref(db), `agenda/${hoje}`));
+      if (!snap.exists()) return;
+      
+      const listaCompromissosDoDia = snap.val() || [];
+      let houveAlteracaoNoFirebase = false;
+
+      for (let i=0; i<listaCompromissosDoDia.length; i++){
+        const c = listaCompromissosDoDia[i];
+        if (!c || !c.hora || !c.texto || c.feito) continue; // Ignora compromissos vazios ou feitos
+
+        const [h,m] = (c.hora||'').split(':').map(x=>parseInt(x,10));
+        if (Number.isNaN(h) || Number.isNaN(m)) continue;
+        
+        const compDate = new Date();
+        compDate.setFullYear(now.getFullYear(), now.getMonth(), now.getDate()); // Garante que a data é a de hoje
+        compDate.setHours(h,m,0,0);
+        
+        const jaAvisado = !!c.avisadoEm;
+
+        if (!jaAvisado && compDate.getTime() <= now.getTime()) {
+          notificar(`Lembrete (${c.hora}): ${c.texto}`);
+          c.avisadoEm = Date.now(); // Marca como avisado
+          listaCompromissosDoDia[i] = c; // Atualiza o objeto na lista
+          houveAlteracaoNoFirebase = true;
         }
-        if (houveAlteracao) await set(ref(db, `agenda/${hoje}`), lista);
-        return;
       }
 
-      // Se a tela está no HOJE, use o cache local dadosDia
-      let mudou = false;
-      for (let i=0;i<dadosDia.length;i++){
-        const c = dadosDia[i];
-        if (!c || !c.hora || !c.texto) continue;
-        const [h,m] = c.hora.split(':').map(x=>parseInt(x,10));
-        if (Number.isNaN(h) || Number.isNaN(m)) continue;
-        const comp = new Date();
-        comp.setHours(h,m,0,0);
-        const jaAvisado = !!c.avisadoEm;
-        if (!jaAvisado && comp.getTime() <= Date.now()) {
-          notificar(`Lembrete (${c.hora}): ${c.texto}`);
-          c.avisadoEm = Date.now();
-          mudou = true;
+      if (houveAlteracaoNoFirebase) {
+        // Salva as alterações de "avisadoEm" no Firebase
+        await set(ref(db, `agenda/${hoje}`), listaCompromissosDoDia);
+        // Se a tela estiver no dia de hoje, atualiza também a variável local
+        if (diaAtual === hoje) {
+          dadosDia = listaCompromissosDoDia;
+          renderAgenda();
         }
       }
-      if (mudou) salvarAgenda(true);
     }
 
-    setInterval(checarAlarmes, 30000); // checa a cada 30s
-    pedirPermissaoNotif();
+    setInterval(checarAlarmes, 15000); // checa a cada 15s
+    // pedirPermissaoNotif() não é mais necessário com o alert personalizado
 
     /************* CPF *************/
     function validarCPF(cpf){
@@ -564,6 +635,8 @@
       carregarNotasFixas();
 
       ui.novoBtn.addEventListener('click', adicionarCompromisso);
+      ui.copiarCompromissosBtn.addEventListener('click', copiarCompromissos); // Novo
+      ui.colarCompromissosBtn.addEventListener('click', colarCompromissos);   // Novo
       ui.exportarBtn.addEventListener('click', exportarTXT);
       ui.hojeBtn.addEventListener('click', ()=>{
         ui.dataInput.value = hojeISO();
