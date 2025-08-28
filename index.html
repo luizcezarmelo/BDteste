@@ -1,160 +1,337 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Agenda do Fofo</title>
-  <style>
-    * { box-sizing: border-box; }
-    :root{
-      --b: #0f172a;      /* slate-900 */
-      --fg:#0b1324;      /* text */
-      --muted:#6b7280;   /* gray-500 */
-      --bd:#e5e7eb;      /* gray-200 */
-      --pri:#2563eb;     /* blue-600 */
-      --pri-2:#1e40af;   /* blue-800 */
-      --ok:#16a34a;      /* green-600 */
-      --warn:#ea580c;    /* orange-600 */
-      --bg:#ffffff;
-    }
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue','Noto Sans',Arial,sans-serif;background:var(--bg);color:var(--fg)}
-    .container{display:flex;flex-direction:column}
-    @media(min-width:900px){.container{flex-direction:row;min-height:100vh}}
-    .left-panel,.right-panel{padding:20px}
-    .left-panel{flex:2;border-right:1px solid var(--bd)}
-    .right-panel{flex:1}
-    h1{margin:0 0 10px 0}
-    .calendar-section{margin:12px 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-    .day-nav{display:flex;gap:8px;align-items:center;margin:0 0 12px 0}
-    button{cursor:pointer;border:1px solid var(--bd);background:#f8fafc;border-radius:8px;padding:8px 12px}
-    button:hover{background:#eef2ff}
-    .actions{display:flex;gap:10px;margin:10px 0;flex-wrap:wrap}
-    .search-area{display:flex;gap:6px;align-items:center;margin:8px 0;flex-wrap:wrap}
-    .search-area input{flex:1;min-width:160px;padding:8px;border:1px solid var(--bd);border-radius:6px}
-    .search-results{border:1px solid var(--bd);border-radius:8px;max-height:220px;overflow:auto}
-    .search-results div{padding:8px 10px;border-bottom:1px solid var(--bd);cursor:pointer}
-    .search-results div:last-child{border-bottom:none}
-    .search-results div:hover{background:#f1f5f9}
-    .commitment{display:grid;grid-template-columns:92px 1fr auto auto;gap:6px;align-items:center;padding:8px;border:1px solid var(--bd);border-radius:10px;margin-bottom:8px}
-    .commitment input[type="time"]{padding:6px;border:1px solid var(--bd);border-radius:6px;width:100%}
-    .commitment input[type="text"]{padding:8px;border:1px solid var(--bd);border-radius:6px;width:100%}
-    .commitment .ok{border-color:#c7f0cf;background:#ecfdf5}
-    .commitment .del{border-color:#ffd7d7;background:#fff1f2}
-    .done{text-decoration:line-through;color:#6b7280}
-    .checked{background:#e7f0ff}
-    .destaque{outline:3px solid #fde68a;background:#fffbeb}
-    .muted{color:var(--muted);font-size:.9rem}
-    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-    .tag{display:inline-flex;align-items:center;gap:6px;background:#eef2ff;border:1px solid var(--bd);border-radius:999px;padding:6px 10px;font-size:.85rem}
-    .pill{background:#ecfeff;border:1px solid #bae6fd;border-radius:999px;padding:2px 8px;font-size:.75rem}
-    .panel{border:1px solid var(--bd);border-radius:12px;padding:12px}
-    /* LOGIN */
-    #login-screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#f3f4f6;z-index:1000}
-    #login-card{background:#fff;border:1px solid var(--bd);border-radius:16px;padding:22px;box-shadow:0 10px 30px rgba(0,0,0,.08);min-width:320px;max-width:92vw}
-    #login-card h2{margin:0 0 10px 0}
-    #login-card input{width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px}
-    #login-card .msg{min-height:18px;font-size:.9rem}
-    #toggle-pass{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:transparent;border:none;font-size:1rem;cursor:pointer}
-    .relogio{font-variant-numeric:tabular-nums}
-  </style>
+    <meta charset="UTF-8">
+    <title>Gerador de MAPA e HOLTER</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .main-container {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+        .section {
+            width: 48%;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #fff;
+        }
+        h2 {
+            text-align: center;
+            margin-top: 0;
+        }
+        textarea {
+            width: 100%;
+            height: 180px;
+            margin-bottom: 10px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            box-sizing: border-box;
+            resize: vertical;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .extended-holter-section {
+            display: flex;
+            align-items: center;
+            margin-top: 20px;
+        }
+        .extended-holter-section input {
+            flex-grow: 1;
+            margin-right: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        .extended-holter-section button {
+            width: auto;
+        }
+    </style>
 </head>
 <body>
-  <!-- LOGIN -->
-  <div id="login-screen">
-    <div id="login-card">
-      <h2 id="login-title">Acesso Restrito</h2>
-      <p class="muted" id="login-sub">Entre com a senha para continuar.</p>
-      <div style="position:relative;margin:8px 0 6px 0">
-        <input type="password" id="password-input" placeholder="Digite a senha" />
-        <button id="toggle-pass" title="Mostrar/ocultar">👁️</button>
-      </div>
-      <div class="row">
-        <button id="login-btn">Entrar</button>
-        <button id="define-btn" style="display:none">Definir senha</button>
-      </div>
-      <div class="msg" id="login-error" style="color:#dc2626;"></div>
-      <div class="muted" style="margin-top:8px">Dica: Enter confirma.</div>
+
+    <div class="main-container">
+        <div class="section">
+            <h2>MAPA</h2>
+            <textarea id="mapa-names" rows="10" placeholder="Digite um nome por linha..."></textarea>
+            <button onclick="handleMapa()">Imprimir</button>
+        </div>
+        <div class="section">
+            <h2>Holter</h2>
+            <textarea id="holter-names" rows="10" placeholder="Digite um nome por linha..."></textarea>
+            <button onclick="handleHolter()">Imprimir</button>
+        </div>
     </div>
-  </div>
+    <div class="extended-holter-section">
+        <input type="text" id="extended-holter-name" placeholder="Digite um nome para Holter Estendido">
+        <button onclick="handleExtendedHolter()">Imprimir</button>
+    </div>
 
-  <!-- APP -->
-  <div class="container" id="app" style="display:none">
-    <!-- (Restante do HTML igual ao original) -->
-  </div>
-
-  <!-- Firebase + App (ESM) -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-    import {
-      getDatabase, ref, child, get, set
-    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyBiikcagIm1p7wJG6DsHijkvdy1fpDBn8Y",
-      authDomain: "bd-teste-c931c.firebaseapp.com",
-      databaseURL: "https://bd-teste-c931c-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "bd-teste-c931c",
-      storageBucket: "bd-teste-c931c.firebasestorage.app",
-      messagingSenderId: "270308100761",
-      appId: "1:270308100761:web:ae34fde6d5ae86b67b0608"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db  = getDatabase(app);
-
-    // (... código de login, agenda, etc. permanece igual ...)
-
-    /************* Alarmes *************/
-    function notificar(msg){
-      alert(msg); // ✅ Agora o alarme abre popup
-    }
-
-    async function checarAlarmes(){
-      const hoje = hojeISO();
-      const now = new Date();
-      if (ui.dataInput.value !== hoje) {
-        const snap = await get(child(ref(db), `agenda/${hoje}`));
-        if (!snap.exists()) return;
-        const lista = snap.val() || [];
-        let houveAlteracao = false;
-        for (let i=0;i<lista.length;i++){
-          const c = lista[i];
-          if (!c || !c.hora || !c.texto) continue;
-          const [h,m] = (c.hora||'').split(':').map(x=>parseInt(x,10));
-          if (Number.isNaN(h) || Number.isNaN(m)) continue;
-          const comp = new Date();
-          comp.setHours(h,m,0,0);
-          const jaAvisado = !!c.avisadoEm;
-          if (!jaAvisado && comp.getTime() <= now.getTime()) {
-            notificar(`Lembrete (${c.hora}): ${c.texto}`);
-            c.avisadoEm = Date.now();
-            lista[i] = c;
-            houveAlteracao = true;
-          }
+    <script>
+        function printDocuments(docs) {
+            const printWindow = window.open('', '_blank');
+            const content = docs.map(doc => `<div class="printable-page">${doc}</div>`).join('');
+            
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Impressão</title>
+                    <style>
+                        @media print {
+                            body { margin: 0; }
+                            .printable-page {
+                                page-break-before: always;
+                                break-before: page;
+                            }
+                            .printable-page:first-child {
+                                page-break-before: avoid;
+                                break-before: auto;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>${content}</body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => { printWindow.print(); }, 500);
         }
-        if (houveAlteracao) await set(ref(db, `agenda/${hoje}`), lista);
-        return;
-      }
 
-      let mudou = false;
-      for (let i=0;i<dadosDia.length;i++){
-        const c = dadosDia[i];
-        if (!c || !c.hora || !c.texto) continue;
-        const [h,m] = c.hora.split(':').map(x=>parseInt(x,10));
-        if (Number.isNaN(h) || Number.isNaN(m)) continue;
-        const comp = new Date();
-        comp.setHours(h,m,0,0);
-        const jaAvisado = !!c.avisadoEm;
-        if (!jaAvisado && comp.getTime() <= Date.now()) {
-          notificar(`Lembrete (${c.hora}): ${c.texto}`);
-          c.avisadoEm = Date.now();
-          mudou = true;
+        function handleMapa() {
+            const names = document.getElementById('mapa-names').value.split('\n').filter(name => name.trim() !== '');
+            if (names.length === 0) {
+                alert('Por favor, insira pelo menos um nome para MAPA.');
+                return;
+            }
+            const docs = [];
+            names.forEach(name => {
+                const termContent = getTermContent(name.trim(), 'MONITOR AMBULATORIAL DE PRESSÃO ARTERIAL', '6516,44');
+                const diaryContent = getDiaryContent(name.trim(), 'Pressão Arterial ( MAPA)');
+                docs.push(termContent, diaryContent);
+            });
+            printDocuments(docs);
         }
-      }
-      if (mudou) salvarAgenda(true);
-    }
 
-    setInterval(checarAlarmes, 30000);
-  </script>
-</body>
-</html>
+        function handleHolter() {
+            const names = document.getElementById('holter-names').value.split('\n').filter(name => name.trim() !== '');
+            if (names.length === 0) {
+                alert('Por favor, insira pelo menos um nome para Holter.');
+                return;
+            }
+            const docs = [];
+            names.forEach(name => {
+                const termContent = getTermContent(name.trim(), 'GRAVADOR DE HOLTER', '9.125,00');
+                const diaryContent = getDiaryContent(name.trim(), 'Holter ECG');
+                docs.push(termContent, diaryContent);
+            });
+            printDocuments(docs);
+        }
+
+        function handleExtendedHolter() {
+            const name = document.getElementById('extended-holter-name').value.trim();
+            if (name === '') {
+                alert('Por favor, insira um nome para Holter Estendido.');
+                return;
+            }
+            const extendedContent = getExtendedContent(name);
+            printDocuments([extendedContent]);
+        }
+
+        function getTermContent(name, equipment, value) {
+            return `
+            <!DOCTYPE html>
+            <html lang="pt-BR">
+            <head>
+            <meta charset="UTF-8">
+            <title>Termo de Movimentação e Responsabilidade</title>
+            <style>
+                @page { size: A4; margin: 1cm; }
+                body { font-family: Arial, sans-serif; font-size: 11pt; margin: 0; padding: 0; }
+                .page { width: 19cm; height: 27.7cm; display: flex; flex-direction: column; justify-content: space-between; }
+                .container { width: 100%; height: 13.2cm; border: 1px solid #000; padding: 0.4cm; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; }
+                .header { display: flex; align-items: center; margin-bottom: 0.3cm; }
+                .header img { width: 6.8cm; height: auto; margin-right: 0.3cm; }
+                .header-text { font-size: 10pt; line-height: 1.1; }
+                .title { text-align: center; font-weight: bold; font-size: 11pt; margin-bottom: 0.1cm; }
+                .subtitle { text-align: center; font-weight: bold; font-size: 10pt; margin-bottom: 0.3cm; }
+                table { width: 100%; border-collapse: collapse; margin-bottom: 0.3cm; }
+                td { border: 1px solid #000; padding: 0.15cm; vertical-align: top; font-size: 10pt; }
+                .bold { font-weight: bold; }
+                p { font-size: 9pt; margin: 0.4cm 0 0 0; text-align: justify; }
+                .valor { text-align: right; }
+                .assinaturas-box { display: flex; border: 1px solid #000; margin-top: 0.7cm; height: 3cm; }
+                .assinaturas-box div { flex: 1; border-left: 1px solid #000; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 0.5cm; font-size: 9pt; }
+                .assinaturas-box div:first-child { border-left: none; }
+            </style>
+            </head>
+            <body>
+            <div class="page">
+                <div class="container">
+                    <div>
+                        <div class="header">
+                            <img src="logo.png" alt="Logo">
+                            <div class="header-text">Rede SARAH de Hospitais de Reabilitação<br>Associação das Pioneiras Sociais</div>
+                        </div>
+                        <div class="title">TERMO DE MOVIMENTAÇÃO E RESPONSABILIDADE</div>
+                        <div class="subtitle">EMPRÉSTIMO</div>
+                        <table>
+                            <tr>
+                                <td style="width: 50%;"><div class="bold">CEDENTE</div>HFEX7 - LAB. CARDIO PULMONAR</td>
+                                <td style="width: 50%;"><div class="bold">RECEBEDOR</div>${name}</td>
+                            </tr>
+                        </table>
+                        <table>
+                            <tr><td class="bold" style="width: 70%;">ESPECIFICAÇÃO</td><td class="bold" style="width: 30%;">VALOR(R$)</td></tr>
+                            <tr><td>${equipment}</td><td class="valor">${value}</td></tr>
+                            <tr><td colspan="2">Valor p/ fins de ressarcimento: R$ ${value}</td></tr>
+                        </table>
+                        <table>
+                            <tr><td class="bold" style="text-align:right;">TOTAL</td><td class="valor">${value}</td></tr>
+                        </table>
+                        <p>ASSUMO INTEIRA RESPONSABILIDADE PELO(S) BEM(S) ACIMA RELACIONADO(S) COMPROMETENDO-ME A ZELAR PELA SUA MANUTENÇÃO E REPÔ-LO(S) EM CASO DE EXTRAVIO.</p>
+                    </div>
+                    <div class="assinaturas-box">
+                        <div>____________________________<span>ASS./CARIMBO <b>LABORATÓRIO</b></span></div>
+                        <div>____________________________<span>ASS./CARIMBO <b>PACIENTE</b></span></div>
+                    </div>
+                </div>
+                <div class="container">
+                    <div>
+                        <div class="header">
+                            <img src="logo.png" alt="Logo">
+                            <div class="header-text">Rede SARAH de Hospitais de Reabilitação<br>Associação das Pioneiras Sociais</div>
+                        </div>
+                        <div class="title">TERMO DE MOVIMENTAÇÃO E RESPONSABILIDADE</div>
+                        <div class="subtitle">DEVOLUÇÃO</div>
+                        <table>
+                            <tr>
+                                <td style="width: 50%;"><div class="bold">CEDENTE</div>${name}</td>
+                                <td style="width: 50%;"><div class="bold">RECEBEDOR</div>HFEX7 - LAB. CARDIO PULMONAR</td>
+                            </tr>
+                        </table>
+                        <table>
+                            <tr><td class="bold" style="width: 70%;">ESPECIFICAÇÃO</td><td class="bold" style="width: 30%;">VALOR(R$)</td></tr>
+                            <tr><td>${equipment}</td><td class="valor">${value}</td></tr>
+                            <tr><td colspan="2">Valor p/ fins de ressarcimento: ${value}</td></tr>
+                        </table>
+                        <table>
+                            <tr><td class="bold" style="text-align:right;">TOTAL</td><td class="valor">${value}</td></tr>
+                        </table>
+                        <p>ASSUMO INTEIRA RESPONSABILIDADE PELO(S) BEM(S) ACIMA RELACIONADO(S) COMPROMETENDO-ME A ZELAR PELA SUA MANUTENÇÃO E REPÔ-LO(S) EM CASO DE EXTRAVIO.</p>
+                    </div>
+                    <div class="assinaturas-box">
+                        <div>____________________________<span>ASS./CARIMBO <b>LABORATÓRIO</b></span></div>
+                        <div>____________________________<span>ASS./CARIMBO <b>PACIENTE</b></span></div>
+                    </div>
+                </div>
+            </div>
+            </body>
+            </html>
+            `;
+        }
+
+        function getDiaryContent(name, examType) {
+            let diaryHTML = `
+            <!DOCTYPE html>
+            <html lang="pt-BR">
+            <head>
+                <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+                <title>Diário de Atividades</title>
+                <style>
+                    @page { size: A4; margin: 1cm; }
+                    body { font-family: "Arial", sans-serif; }
+                    .header { display: flex; align-items: center; margin-bottom: 10px; }
+                    .header img { width: 6.8cm; height: auto; margin-right: 0.3cm; }
+                    .header-text { font-size: 14px; font-weight: bold; line-height: 1.3; }
+                    .activity-diary { background-color: #ffffff; border-collapse: collapse; border: 2px solid #000000; width: 100%; position: relative; }
+                    .activity-diary td { border: 1px solid #000000; padding: 2px 6px; vertical-align: middle; }
+                    .text-center { text-align: center; } .font-large { font-size: 1.1em; } .font-bold { font-weight: bold; } .v-middle { vertical-align: middle; }
+                    .border-top-2 { border-top: 2px solid #000000; } .border-bottom-2 { border-bottom: 2px solid #000000; } .border-left-2 { border-left: 2px solid #000000; } .border-right-2 { border-right: 2px solid #000000; }
+                    .no-border { border: none; } .no-padding { padding: 0; }
+                    .sleep-block-container { padding: 6px; }
+                    .sleep-block-line { display: flex; justify-content: space-around; align-items: center; padding: 4px 0; }
+                    .sleep-input-space { border-bottom: 1px solid #555; min-width: 100px; display: inline-block; text-align: center; }
+                    .date-top-right { position: absolute; top: 5px; right: 10px; font-size: 10px; color: #333; }
+                </style>
+            </head>
+            <body>
+            <div class="header">
+                <img src="logo.png" alt="Logo">
+                <div class="header-text">Rede SARAH de Hospitais de Reabilitação<br>Associação das Pioneiras Sociais</div>
+            </div>
+            <table class="activity-diary">
+                <span class="date-top-right">${new Date().toLocaleDateString('pt-BR')}</span>
+                <thead>
+                    <tr><td colspan="9" class="no-border text-center font-large">Hospital SARAH – Fortaleza / Laboratório de Função Cardiopulmonar</td></tr>
+                    <tr><td colspan="9" class="no-border text-center font-large">Monitorização para Exames de ${examType}</td></tr>
+                    <tr><td colspan="9" class="no-border" style="text-align: center; padding: 4px 0; height: 18px;"><span style="display: inline-block;">Retirar ____/_____/________ às ____:_____</span></td></tr>
+                    <tr class="border-top-2 border-bottom-2"><td colspan="9" class="text-center font-large font-bold">Diário de Atividades</td></tr>
+                    <tr><td colspan="9" height="35" class="text-center v-middle font-bold font-large">${name}</td></tr>
+                </thead>
+                <tbody>`;
+            const maxRows = 36;
+            for (let i = 0; i < maxRows; i++) {
+                diaryHTML += `<tr style="height: 18px;" ${i === maxRows - 1 ? 'class="border-bottom-2"' : ''}>
+                    <td class="border-left-2 border-right-2">&nbsp;</td>
+                    <td class="border-right-2">&nbsp;</td>
+                    <td colspan="7" class="border-right-2">&nbsp;</td>
+                </tr>`;
+            }
+            diaryHTML += `
+                </tbody>
+                <tfoot><tr><td colspan="9" class="no-border text-center" style="padding-top: 8px;">Se necessário, continue no verso.</td></tr></tfoot>
+            </table>
+            </body>
+            </html>`;
+            return diaryHTML;
+        }
+
+        function getExtendedContent(name) {
+            let content = `
+            <!DOCTYPE html>
+            <html lang="pt-BR">
+            <head>
+            <meta charset="UTF-8">
+            <title>Monitorização Prolongada do Ritmo Cardíaco</title>
+            <style>
+                @page{size:A4;margin:1cm}
+                body{font-family:Arial,sans-serif;margin:0;text-align:center}
+                .header{display:flex;align-items:center;margin-bottom:10px;justify-content:center}
+                .header img{width:6.8cm;height:auto;margin-right:0.3cm}
+                .header-text{font-size:14px;font-weight:bold;line-height:1.3}
+                h1{font-size:14px;margin:5px 0}
+                h2{font-size:12px;margin:4px 0;font-weight:normal}
+                .nome{border:1px solid #000;width:100%;height:20px;margin:5px auto;display:flex;align-items:center;justify-content:center;font-weight:bold}
+                table{width:100%;border-collapse:collapse;font-size:12px;margin-top:5px}
+                th,td{border:1px solid #000;padding:2px 4px}
+                td{height:0.5cm}
+                footer{margin-top:8px;font-size:11px}
+            </style>
+            </head>
+            <body>
+            <div class="header">
+                <img src="logo.png" alt="Logo">
+                <div class="header-text">Rede SARAH de Hospitais de Reabilitação<br>Associação das Pioneiras Sociais</div>
+            </div>
+            <h1>Monitorização Prolongada do Ritmo Cardíaco<br>Hospital SARAH – Fortaleza / Laboratório de Função Cardiopulmonar</h1>
+            <div class="nome">${name}</div
