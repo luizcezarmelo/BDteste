@@ -1,337 +1,288 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <title>Gerador de MAPA e HOLTER</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }
-        .main-container {
-            display: flex;
-            justify-content: space-around;
-            margin-bottom: 20px;
-        }
-        .section {
-            width: 48%;
-            padding: 15px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            background-color: #fff;
-        }
-        h2 {
-            text-align: center;
-            margin-top: 0;
-        }
-        textarea {
-            width: 100%;
-            height: 180px;
-            margin-bottom: 10px;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-            box-sizing: border-box;
-            resize: vertical;
-        }
-        button {
-            width: 100%;
-            padding: 12px;
-            font-size: 16px;
-            cursor: pointer;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            transition: background-color 0.3s;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        .extended-holter-section {
-            display: flex;
-            align-items: center;
-            margin-top: 20px;
-        }
-        .extended-holter-section input {
-            flex-grow: 1;
-            margin-right: 10px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-        }
-        .extended-holter-section button {
-            width: auto;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agenda do Fofo</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #fff;
+      color: #000;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+    }
+    @media (min-width: 768px) {
+      .container {
+        flex-direction: row;
+        min-height: 100vh;
+      }
+    }
+    .left-panel, .right-panel { padding: 20px; }
+    .left-panel { flex: 2; border-right: 1px solid #ccc; }
+    .right-panel { flex: 1; }
+
+    .calendar-section {
+      margin: 20px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .calendar-section button { padding: 5px 10px; cursor: pointer; }
+
+    .day-nav {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin: -10px 0 10px 0;
+    }
+    .day-nav button { padding: 2px 8px; cursor: pointer; }
+
+    .actions { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+    .search-area { display: flex; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; }
+    .search-area input { flex: 1; padding: 5px; min-width: 120px; }
+    .search-results { background: #fff; border: 1px solid #ccc; padding: 10px; max-height: 150px; overflow-y: auto; }
+    .search-results div { cursor: pointer; padding: 4px; }
+    .search-results div:hover { background: #eee; }
+
+    .commitment {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+      flex-wrap: wrap;
+      padding: 5px;
+      border-radius: 4px;
+    }
+    .commitment input[type="time"] { margin-right: 5px; }
+    .commitment input[type="text"] { flex: 1; padding: 5px; margin-right: 5px; }
+    .commitment button { margin-left: 3px; }
+
+    .done { text-decoration: line-through; color: gray; }
+    .checked { background-color: #d1e7ff; }
+    .destaque { background: yellow; }
+
+    #cpfStatus.valid { color: blue; }
+    #cpfStatus.invalid { color: red; }
+  </style>
 </head>
 <body>
-
-    <div class="main-container">
-        <div class="section">
-            <h2>MAPA</h2>
-            <textarea id="mapa-names" rows="10" placeholder="Digite um nome por linha..."></textarea>
-            <button onclick="handleMapa()">Imprimir</button>
-        </div>
-        <div class="section">
-            <h2>Holter</h2>
-            <textarea id="holter-names" rows="10" placeholder="Digite um nome por linha..."></textarea>
-            <button onclick="handleHolter()">Imprimir</button>
-        </div>
+  <div class="container" id="main-content">
+    <div class="left-panel">
+      <h1>Agenda do Fofo</h1>
+      <div class="calendar-section">
+        <input type="date" id="dataSelecionada">
+        <button id="hojeBtn" title="Hoje">📅</button>
+      </div>
+      <div class="day-nav">
+        <button id="prevDayBtn">◀</button>
+        <button id="nextDayBtn">▶</button>
+      </div>
+      <div class="actions">
+        <button id="novoBtn">Novo</button>
+        <button id="exportarBtn">Exportar TXT</button>
+      </div>
+      <div id="agenda"></div>
     </div>
-    <div class="extended-holter-section">
-        <input type="text" id="extended-holter-name" placeholder="Digite um nome para Holter Estendido">
-        <button onclick="handleExtendedHolter()">Imprimir</button>
+
+    <div class="right-panel">
+      <h2>Validador de CPF</h2>
+      <div style="display:flex; gap:5px;">
+        <input type="text" id="cpf" placeholder="Digite o CPF">
+        <button onclick="limparCPF()">❌</button>
+      </div>
+      <p id="cpfStatus"></p>
+      <button onclick="copiarCPF()">Copiar</button>
+
+      <h3>🔍 Pesquisa</h3>
+      <div class="search-area">
+        <input type="text" id="search" placeholder="Pesquisar...">
+        <button onclick="limparBusca()">❌</button>
+      </div>
+      <div id="searchResults" class="search-results"></div>
+
+      <h3>📝 Lembretes Fixos</h3>
+      <textarea id="notasFixas" rows="12" style="width:100%;"></textarea>
     </div>
+  </div>
 
-    <script>
-        function printDocuments(docs) {
-            const printWindow = window.open('', '_blank');
-            const content = docs.map(doc => `<div class="printable-page">${doc}</div>`).join('');
-            
-            printWindow.document.write(`
-                <html>
-                <head>
-                    <title>Impressão</title>
-                    <style>
-                        @media print {
-                            body { margin: 0; }
-                            .printable-page {
-                                page-break-before: always;
-                                break-before: page;
-                            }
-                            .printable-page:first-child {
-                                page-break-before: avoid;
-                                break-before: auto;
-                            }
-                        }
-                    </style>
-                </head>
-                <body>${content}</body>
-                </html>
-            `);
-            printWindow.document.close();
-            printWindow.focus();
-            setTimeout(() => { printWindow.print(); }, 500);
+<script>
+  // --- VARIÁVEIS GLOBAIS ---
+  const agendaEl = document.getElementById('agenda');
+  const dataInput = document.getElementById('dataSelecionada');
+  const novoBtn = document.getElementById('novoBtn');
+  const exportarBtn = document.getElementById('exportarBtn');
+  const hojeBtn = document.getElementById('hojeBtn');
+  const prevDayBtn = document.getElementById('prevDayBtn');
+  const nextDayBtn = document.getElementById('nextDayBtn');
+  const notasFixasEl = document.getElementById('notasFixas');
+  const searchEl = document.getElementById('search');
+  const searchResultsEl = document.getElementById('searchResults');
+
+  const maxCompromissos = 20;
+  let compromissosDia = [];
+
+  // --- FUNÇÕES AGENDA ---
+  function carregarAgenda() {
+    agendaEl.innerHTML = '';
+    compromissosDia = JSON.parse(localStorage.getItem(dataInput.value)) || [];
+    while (compromissosDia.length < 15) compromissosDia.push({hora:'', texto:'', feito:false});
+
+    compromissosDia.forEach((c, i) => agendaEl.appendChild(criarCampoCompromisso(c, i)));
+  }
+
+  function salvarAgenda() {
+    localStorage.setItem(dataInput.value, JSON.stringify(compromissosDia));
+  }
+
+  function criarCampoCompromisso(item, idx) {
+    const div = document.createElement('div');
+    div.className = 'commitment';
+    if (item.feito) div.classList.add('done');
+
+    const hora = document.createElement('input');
+    hora.type = 'time';
+    hora.value = item.hora;
+    hora.onchange = () => { compromissosDia[idx].hora = hora.value; salvarAgenda(); };
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = item.texto;
+    input.oninput = () => { compromissosDia[idx].texto = input.value; salvarAgenda(); };
+
+    const okBtn = document.createElement('button');
+    okBtn.textContent = '✔';
+    okBtn.onclick = () => { 
+      input.classList.toggle('done');
+      compromissosDia[idx].feito = !compromissosDia[idx].feito;
+      salvarAgenda();
+    };
+
+    const delBtn = document.createElement('button');
+    delBtn.textContent = '🗑';
+    delBtn.onclick = () => { 
+      compromissosDia.splice(idx,1);
+      salvarAgenda(); carregarAgenda();
+    };
+
+    div.append(hora,input,okBtn,delBtn);
+    return div;
+  }
+
+  function adicionarCompromisso() {
+    if (compromissosDia.length < maxCompromissos) {
+      compromissosDia.push({hora:'', texto:'', feito:false});
+      salvarAgenda(); carregarAgenda();
+    }
+  }
+
+  function exportarParaTXT() {
+    let conteudo = `Agenda do dia ${dataInput.value}\n\n`;
+    compromissosDia.forEach((c,i)=> {
+      if (c.texto) conteudo += `${i+1}. ${c.hora?c.hora+' - ':''}${c.texto}${c.feito?' (✔ concluído)':''}\n`;
+    });
+    const blob = new Blob([conteudo], {type:'text/plain'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `agenda_${dataInput.value}.txt`;
+    a.click();
+  }
+
+  // --- PESQUISA ---
+  function pesquisarCompromisso() {
+    searchResultsEl.innerHTML = '';
+    const termo = searchEl.value.trim().toUpperCase();
+    if (termo.length < 3) return;
+    for (let key in localStorage) {
+      if (!key.match(/^\d{4}-\d{2}-\d{2}$/)) continue;
+      let dados = JSON.parse(localStorage.getItem(key)) || [];
+      dados.forEach((c,i)=> {
+        if (c.texto && c.texto.includes(termo)) {
+          const div = document.createElement('div');
+          div.textContent = `${key}: ${c.hora} - ${c.texto}`;
+          div.onclick = ()=> {
+            dataInput.value = key;
+            carregarAgenda();
+          };
+          searchResultsEl.appendChild(div);
         }
+      });
+    }
+  }
+  function limparBusca() { searchEl.value=''; searchResultsEl.innerHTML=''; }
 
-        function handleMapa() {
-            const names = document.getElementById('mapa-names').value.split('\n').filter(name => name.trim() !== '');
-            if (names.length === 0) {
-                alert('Por favor, insira pelo menos um nome para MAPA.');
-                return;
-            }
-            const docs = [];
-            names.forEach(name => {
-                const termContent = getTermContent(name.trim(), 'MONITOR AMBULATORIAL DE PRESSÃO ARTERIAL', '6516,44');
-                const diaryContent = getDiaryContent(name.trim(), 'Pressão Arterial ( MAPA)');
-                docs.push(termContent, diaryContent);
-            });
-            printDocuments(docs);
+  // --- CPF ---
+  function validarCPF(cpf) {
+    cpf = cpf.replace(/\D/g,'');
+    if (cpf.length!==11 || /^(\d)\1{10}$/.test(cpf)) return false;
+    let soma=0, resto;
+    for(let i=1;i<=9;i++) soma+=parseInt(cpf[i-1])*(11-i);
+    resto=(soma*10)%11; if(resto===10||resto===11) resto=0;
+    if(resto!==parseInt(cpf[9])) return false;
+    soma=0;
+    for(let i=1;i<=10;i++) soma+=parseInt(cpf[i-1])*(12-i);
+    resto=(soma*10)%11; if(resto===10||resto===11) resto=0;
+    return resto===parseInt(cpf[10]);
+  }
+  document.getElementById('cpf').addEventListener('input', e=>{
+    const raw = e.target.value.replace(/\D/g,'');
+    const status = document.getElementById('cpfStatus');
+    if (validarCPF(raw)) { status.textContent='CPF válido'; status.className='valid'; }
+    else { status.textContent='CPF inválido'; status.className='invalid'; }
+  });
+  function copiarCPF() {
+    let raw=document.getElementById('cpf').value.replace(/\D/g,'');
+    if (validarCPF(raw)) {
+      let f=raw.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,"$1.$2.$3-$4");
+      navigator.clipboard.writeText(f);
+    }
+  }
+  function limparCPF() { document.getElementById('cpf').value=''; document.getElementById('cpfStatus').textContent=''; }
+
+  // --- LEMBRETES COM POPUP ---
+  function verificarLembretes() {
+    const agora = new Date();
+    const dataHoje = agora.toISOString().split('T')[0];
+    const dadosHoje = JSON.parse(localStorage.getItem(dataHoje)) || [];
+    dadosHoje.forEach(c=>{
+      if (c.hora && c.texto && !c.avisoMostrado) {
+        const [h,m] = c.hora.split(':');
+        if (agora.getHours()==h && agora.getMinutes()==m) {
+          mostrarNotificacao(`Lembrete: ${c.texto}`);
+          c.avisoMostrado=true;
+          localStorage.setItem(dataHoje, JSON.stringify(dadosHoje));
         }
+      }
+    });
+  }
+  function mostrarNotificacao(msg) {
+    if ("Notification" in window) {
+      if (Notification.permission==="granted") new Notification("Agenda do Fofo",{body:msg});
+      else if (Notification.permission!=="denied") {
+        Notification.requestPermission().then(p=>{ if(p==="granted") new Notification("Agenda do Fofo",{body:msg}); else alert(msg); });
+      } else alert(msg);
+    } else alert(msg);
+  }
 
-        function handleHolter() {
-            const names = document.getElementById('holter-names').value.split('\n').filter(name => name.trim() !== '');
-            if (names.length === 0) {
-                alert('Por favor, insira pelo menos um nome para Holter.');
-                return;
-            }
-            const docs = [];
-            names.forEach(name => {
-                const termContent = getTermContent(name.trim(), 'GRAVADOR DE HOLTER', '9.125,00');
-                const diaryContent = getDiaryContent(name.trim(), 'Holter ECG');
-                docs.push(termContent, diaryContent);
-            });
-            printDocuments(docs);
-        }
+  // --- INICIALIZAÇÃO ---
+  dataInput.value = new Date().toISOString().split('T')[0];
+  carregarAgenda();
 
-        function handleExtendedHolter() {
-            const name = document.getElementById('extended-holter-name').value.trim();
-            if (name === '') {
-                alert('Por favor, insira um nome para Holter Estendido.');
-                return;
-            }
-            const extendedContent = getExtendedContent(name);
-            printDocuments([extendedContent]);
-        }
+  novoBtn.onclick=adicionarCompromisso;
+  exportarBtn.onclick=exportarParaTXT;
+  hojeBtn.onclick=()=>{ dataInput.value=new Date().toISOString().split('T')[0]; carregarAgenda(); };
+  prevDayBtn.onclick=()=>{ let d=new Date(dataInput.value); d.setDate(d.getDate()-1); dataInput.value=d.toISOString().split('T')[0]; carregarAgenda(); };
+  nextDayBtn.onclick=()=>{ let d=new Date(dataInput.value); d.setDate(d.getDate()+1); dataInput.value=d.toISOString().split('T')[0]; carregarAgenda(); };
+  searchEl.oninput=pesquisarCompromisso;
 
-        function getTermContent(name, equipment, value) {
-            return `
-            <!DOCTYPE html>
-            <html lang="pt-BR">
-            <head>
-            <meta charset="UTF-8">
-            <title>Termo de Movimentação e Responsabilidade</title>
-            <style>
-                @page { size: A4; margin: 1cm; }
-                body { font-family: Arial, sans-serif; font-size: 11pt; margin: 0; padding: 0; }
-                .page { width: 19cm; height: 27.7cm; display: flex; flex-direction: column; justify-content: space-between; }
-                .container { width: 100%; height: 13.2cm; border: 1px solid #000; padding: 0.4cm; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; }
-                .header { display: flex; align-items: center; margin-bottom: 0.3cm; }
-                .header img { width: 6.8cm; height: auto; margin-right: 0.3cm; }
-                .header-text { font-size: 10pt; line-height: 1.1; }
-                .title { text-align: center; font-weight: bold; font-size: 11pt; margin-bottom: 0.1cm; }
-                .subtitle { text-align: center; font-weight: bold; font-size: 10pt; margin-bottom: 0.3cm; }
-                table { width: 100%; border-collapse: collapse; margin-bottom: 0.3cm; }
-                td { border: 1px solid #000; padding: 0.15cm; vertical-align: top; font-size: 10pt; }
-                .bold { font-weight: bold; }
-                p { font-size: 9pt; margin: 0.4cm 0 0 0; text-align: justify; }
-                .valor { text-align: right; }
-                .assinaturas-box { display: flex; border: 1px solid #000; margin-top: 0.7cm; height: 3cm; }
-                .assinaturas-box div { flex: 1; border-left: 1px solid #000; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 0.5cm; font-size: 9pt; }
-                .assinaturas-box div:first-child { border-left: none; }
-            </style>
-            </head>
-            <body>
-            <div class="page">
-                <div class="container">
-                    <div>
-                        <div class="header">
-                            <img src="logo.png" alt="Logo">
-                            <div class="header-text">Rede SARAH de Hospitais de Reabilitação<br>Associação das Pioneiras Sociais</div>
-                        </div>
-                        <div class="title">TERMO DE MOVIMENTAÇÃO E RESPONSABILIDADE</div>
-                        <div class="subtitle">EMPRÉSTIMO</div>
-                        <table>
-                            <tr>
-                                <td style="width: 50%;"><div class="bold">CEDENTE</div>HFEX7 - LAB. CARDIO PULMONAR</td>
-                                <td style="width: 50%;"><div class="bold">RECEBEDOR</div>${name}</td>
-                            </tr>
-                        </table>
-                        <table>
-                            <tr><td class="bold" style="width: 70%;">ESPECIFICAÇÃO</td><td class="bold" style="width: 30%;">VALOR(R$)</td></tr>
-                            <tr><td>${equipment}</td><td class="valor">${value}</td></tr>
-                            <tr><td colspan="2">Valor p/ fins de ressarcimento: R$ ${value}</td></tr>
-                        </table>
-                        <table>
-                            <tr><td class="bold" style="text-align:right;">TOTAL</td><td class="valor">${value}</td></tr>
-                        </table>
-                        <p>ASSUMO INTEIRA RESPONSABILIDADE PELO(S) BEM(S) ACIMA RELACIONADO(S) COMPROMETENDO-ME A ZELAR PELA SUA MANUTENÇÃO E REPÔ-LO(S) EM CASO DE EXTRAVIO.</p>
-                    </div>
-                    <div class="assinaturas-box">
-                        <div>____________________________<span>ASS./CARIMBO <b>LABORATÓRIO</b></span></div>
-                        <div>____________________________<span>ASS./CARIMBO <b>PACIENTE</b></span></div>
-                    </div>
-                </div>
-                <div class="container">
-                    <div>
-                        <div class="header">
-                            <img src="logo.png" alt="Logo">
-                            <div class="header-text">Rede SARAH de Hospitais de Reabilitação<br>Associação das Pioneiras Sociais</div>
-                        </div>
-                        <div class="title">TERMO DE MOVIMENTAÇÃO E RESPONSABILIDADE</div>
-                        <div class="subtitle">DEVOLUÇÃO</div>
-                        <table>
-                            <tr>
-                                <td style="width: 50%;"><div class="bold">CEDENTE</div>${name}</td>
-                                <td style="width: 50%;"><div class="bold">RECEBEDOR</div>HFEX7 - LAB. CARDIO PULMONAR</td>
-                            </tr>
-                        </table>
-                        <table>
-                            <tr><td class="bold" style="width: 70%;">ESPECIFICAÇÃO</td><td class="bold" style="width: 30%;">VALOR(R$)</td></tr>
-                            <tr><td>${equipment}</td><td class="valor">${value}</td></tr>
-                            <tr><td colspan="2">Valor p/ fins de ressarcimento: ${value}</td></tr>
-                        </table>
-                        <table>
-                            <tr><td class="bold" style="text-align:right;">TOTAL</td><td class="valor">${value}</td></tr>
-                        </table>
-                        <p>ASSUMO INTEIRA RESPONSABILIDADE PELO(S) BEM(S) ACIMA RELACIONADO(S) COMPROMETENDO-ME A ZELAR PELA SUA MANUTENÇÃO E REPÔ-LO(S) EM CASO DE EXTRAVIO.</p>
-                    </div>
-                    <div class="assinaturas-box">
-                        <div>____________________________<span>ASS./CARIMBO <b>LABORATÓRIO</b></span></div>
-                        <div>____________________________<span>ASS./CARIMBO <b>PACIENTE</b></span></div>
-                    </div>
-                </div>
-            </div>
-            </body>
-            </html>
-            `;
-        }
+  notasFixasEl.value=localStorage.getItem('notasFixas')||'';
+  notasFixasEl.oninput=()=>localStorage.setItem('notasFixas', notasFixasEl.value);
 
-        function getDiaryContent(name, examType) {
-            let diaryHTML = `
-            <!DOCTYPE html>
-            <html lang="pt-BR">
-            <head>
-                <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-                <title>Diário de Atividades</title>
-                <style>
-                    @page { size: A4; margin: 1cm; }
-                    body { font-family: "Arial", sans-serif; }
-                    .header { display: flex; align-items: center; margin-bottom: 10px; }
-                    .header img { width: 6.8cm; height: auto; margin-right: 0.3cm; }
-                    .header-text { font-size: 14px; font-weight: bold; line-height: 1.3; }
-                    .activity-diary { background-color: #ffffff; border-collapse: collapse; border: 2px solid #000000; width: 100%; position: relative; }
-                    .activity-diary td { border: 1px solid #000000; padding: 2px 6px; vertical-align: middle; }
-                    .text-center { text-align: center; } .font-large { font-size: 1.1em; } .font-bold { font-weight: bold; } .v-middle { vertical-align: middle; }
-                    .border-top-2 { border-top: 2px solid #000000; } .border-bottom-2 { border-bottom: 2px solid #000000; } .border-left-2 { border-left: 2px solid #000000; } .border-right-2 { border-right: 2px solid #000000; }
-                    .no-border { border: none; } .no-padding { padding: 0; }
-                    .sleep-block-container { padding: 6px; }
-                    .sleep-block-line { display: flex; justify-content: space-around; align-items: center; padding: 4px 0; }
-                    .sleep-input-space { border-bottom: 1px solid #555; min-width: 100px; display: inline-block; text-align: center; }
-                    .date-top-right { position: absolute; top: 5px; right: 10px; font-size: 10px; color: #333; }
-                </style>
-            </head>
-            <body>
-            <div class="header">
-                <img src="logo.png" alt="Logo">
-                <div class="header-text">Rede SARAH de Hospitais de Reabilitação<br>Associação das Pioneiras Sociais</div>
-            </div>
-            <table class="activity-diary">
-                <span class="date-top-right">${new Date().toLocaleDateString('pt-BR')}</span>
-                <thead>
-                    <tr><td colspan="9" class="no-border text-center font-large">Hospital SARAH – Fortaleza / Laboratório de Função Cardiopulmonar</td></tr>
-                    <tr><td colspan="9" class="no-border text-center font-large">Monitorização para Exames de ${examType}</td></tr>
-                    <tr><td colspan="9" class="no-border" style="text-align: center; padding: 4px 0; height: 18px;"><span style="display: inline-block;">Retirar ____/_____/________ às ____:_____</span></td></tr>
-                    <tr class="border-top-2 border-bottom-2"><td colspan="9" class="text-center font-large font-bold">Diário de Atividades</td></tr>
-                    <tr><td colspan="9" height="35" class="text-center v-middle font-bold font-large">${name}</td></tr>
-                </thead>
-                <tbody>`;
-            const maxRows = 36;
-            for (let i = 0; i < maxRows; i++) {
-                diaryHTML += `<tr style="height: 18px;" ${i === maxRows - 1 ? 'class="border-bottom-2"' : ''}>
-                    <td class="border-left-2 border-right-2">&nbsp;</td>
-                    <td class="border-right-2">&nbsp;</td>
-                    <td colspan="7" class="border-right-2">&nbsp;</td>
-                </tr>`;
-            }
-            diaryHTML += `
-                </tbody>
-                <tfoot><tr><td colspan="9" class="no-border text-center" style="padding-top: 8px;">Se necessário, continue no verso.</td></tr></tfoot>
-            </table>
-            </body>
-            </html>`;
-            return diaryHTML;
-        }
-
-        function getExtendedContent(name) {
-            let content = `
-            <!DOCTYPE html>
-            <html lang="pt-BR">
-            <head>
-            <meta charset="UTF-8">
-            <title>Monitorização Prolongada do Ritmo Cardíaco</title>
-            <style>
-                @page{size:A4;margin:1cm}
-                body{font-family:Arial,sans-serif;margin:0;text-align:center}
-                .header{display:flex;align-items:center;margin-bottom:10px;justify-content:center}
-                .header img{width:6.8cm;height:auto;margin-right:0.3cm}
-                .header-text{font-size:14px;font-weight:bold;line-height:1.3}
-                h1{font-size:14px;margin:5px 0}
-                h2{font-size:12px;margin:4px 0;font-weight:normal}
-                .nome{border:1px solid #000;width:100%;height:20px;margin:5px auto;display:flex;align-items:center;justify-content:center;font-weight:bold}
-                table{width:100%;border-collapse:collapse;font-size:12px;margin-top:5px}
-                th,td{border:1px solid #000;padding:2px 4px}
-                td{height:0.5cm}
-                footer{margin-top:8px;font-size:11px}
-            </style>
-            </head>
-            <body>
-            <div class="header">
-                <img src="logo.png" alt="Logo">
-                <div class="header-text">Rede SARAH de Hospitais de Reabilitação<br>Associação das Pioneiras Sociais</div>
-            </div>
-            <h1>Monitorização Prolongada do Ritmo Cardíaco<br>Hospital SARAH – Fortaleza / Laboratório de Função Cardiopulmonar</h1>
-            <div class="nome">${name}</div
+  setInterval(verificarLembretes,60000); // verifica lembretes a cada minuto
+</script>
+</body>
+</html>
