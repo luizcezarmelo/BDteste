@@ -1,216 +1,47 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Agenda do Fofo</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0; padding: 0;
-      background: #f4f4f9;
-    }
-    header {
-      background: #6200ea;
-      color: white;
-      padding: 10px;
-      text-align: center;
-    }
-    .container {
-      padding: 20px;
-      max-width: 800px;
-      margin: auto;
-    }
-    .compromisso {
-      display: flex;
-      margin-bottom: 5px;
-    }
-    .compromisso input {
-      flex: 1;
-      padding: 8px;
-      margin-right: 5px;
-    }
-    .compromisso button {
-      padding: 8px;
-    }
-    #searchResults {
-      margin-top: 10px;
-      background: white;
-      border: 1px solid #ccc;
-      display: none;
-    }
-    #searchResults div {
-      padding: 5px;
-      cursor: pointer;
-    }
-    #searchResults div:hover {
-      background: #eee;
-    }
-    #saveIcon {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      font-size: 24px;
-      display: none;
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <h1>Agenda do Fofo</h1>
-  </header>
+function notificar(msg){
+  if ("Notification" in window && Notification.permission === "granted") {
+    new Notification("Agenda do Fofo", { body: msg });
+  }
+  alert(msg); // garante que aparece mesmo se o navegador estiver minimizado
+}
 
-  <div class="container">
-    <h3>Login</h3>
-    <input type="email" id="email" placeholder="Email"><br><br>
-    <input type="password" id="password" placeholder="Senha"><br><br>
-    <button onclick="login()">Login</button>
-    <button onclick="logout()">Logout</button>
+async function checarAlarmes(){
+  const hoje = hojeISO();
+  const agora = new Date();
+  const hhmmAtual = agora.getHours().toString().padStart(2,'0') + ":" + 
+                    agora.getMinutes().toString().padStart(2,'0');
 
-    <h3>Pesquisar Compromissos</h3>
-    <input type="text" id="search" placeholder="Digite para pesquisar...">
-    <div id="searchResults"></div>
+  if (ui.dataInput.value !== hoje) {
+    // mesmo que a tela esteja em outro dia, alarme considera apenas HOJE
+    const snap = await get(child(ref(db), `agenda/${hoje}`));
+    if (!snap.exists()) return;
+    const lista = snap.val() || [];
+    let houveAlteracao = false;
 
-    <h3>Compromissos de hoje</h3>
-    <div id="compromissos"></div>
-  </div>
-
-  <div id="saveIcon">💾</div>
-
-  <script type="module">
-    // Import Firebase
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
-    // Firebase config
-    const firebaseConfig = {
-      apiKey: "AIzaSyBiikcagIm1p7wJG6DsHijkvdy1fpDBn8Y",
-      authDomain: "bd-teste-c931c.firebaseapp.com",
-      databaseURL: "https://bd-teste-c931c-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "bd-teste-c931c",
-      storageBucket: "bd-teste-c931c.firebasestorage.app",
-      messagingSenderId: "270308100761",
-      appId: "1:270308100761:web:ae34fde6d5ae86b67b0608"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
-
-    // Login
-    window.login = function() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      signInWithEmailAndPassword(auth, email, password)
-        .then(() => alert("Logado com sucesso"))
-        .catch(err => alert("Erro: " + err.message));
-    };
-    window.logout = function() {
-      signOut(auth).then(() => alert("Logout efetuado"));
-    };
-
-    // Compromissos
-    const compromissosDiv = document.getElementById("compromissos");
-    const compromissos = [];
-    for (let i = 0; i < 15; i++) {
-      const div = document.createElement("div");
-      div.className = "compromisso";
-      const input = document.createElement("input");
-      input.placeholder = "Compromisso " + (i + 1) + " (hh:mm - texto)";
-      input.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          const next = compromissos[i + 1];
-          if (next) next.focus();
-        }
-      });
-      div.appendChild(input);
-      compromissos.push(input);
-      compromissosDiv.appendChild(div);
-    }
-
-    // Autosave
-    function saveData() {
-      const user = auth.currentUser;
-      if (!user) return;
-      const data = compromissos.map(c => c.value);
-      set(ref(db, "agenda/" + user.uid), data);
-
-      // Ícone de disquete
-      const icon = document.getElementById("saveIcon");
-      icon.style.display = "block";
-      setTimeout(() => icon.style.display = "none", 1000);
-    }
-    setInterval(saveData, 5000);
-
-    // Carregar compromissos
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        get(ref(db, "agenda/" + user.uid)).then(snapshot => {
-          if (snapshot.exists()) {
-            const data = snapshot.val();
-            compromissos.forEach((c, i) => c.value = data[i] || "");
-          }
-        });
+    for (let i=0;i<lista.length;i++){
+      const c = lista[i];
+      if (!c || !c.hora || !c.texto) continue;
+      if (!c.avisadoEm && c.hora === hhmmAtual) {
+        notificar(`Lembrete (${c.hora}): ${c.texto}`);
+        c.avisadoEm = Date.now();
+        lista[i] = c;
+        houveAlteracao = true;
       }
-    });
-
-    // Pesquisa global
-    document.getElementById("search").addEventListener("input", e => {
-      const q = e.target.value.toLowerCase();
-      const resultsDiv = document.getElementById("searchResults");
-      resultsDiv.innerHTML = "";
-      if (q.length < 4) {
-        resultsDiv.style.display = "none";
-        return;
-      }
-      compromissos.forEach((c, i) => {
-        if (c.value.toLowerCase().includes(q)) {
-          const r = document.createElement("div");
-          r.textContent = c.value;
-          r.onclick = () => c.focus();
-          resultsDiv.appendChild(r);
-        }
-      });
-      resultsDiv.style.display = resultsDiv.children.length ? "block" : "none";
-    });
-
-    // ===== Alarme =====
-    const disparados = new Set();
-
-    // Pedir permissão de notificações
-    if ("Notification" in window && Notification.permission !== "granted") {
-      Notification.requestPermission();
     }
+    if (houveAlteracao) await set(ref(db, `agenda/${hoje}`), lista);
+    return;
+  }
 
-    function verificarAlarmes() {
-      const agora = new Date();
-      const horaAtual = agora.getHours().toString().padStart(2, "0") + ":" +
-                        agora.getMinutes().toString().padStart(2, "0");
-
-      compromissos.forEach(c => {
-        if (!c.value) return;
-        const partes = c.value.split("-");
-        if (partes.length < 2) return;
-
-        const hora = partes[0].trim();
-        const texto = partes.slice(1).join("-").trim();
-
-        if (hora === horaAtual && !disparados.has(c)) {
-          disparados.add(c);
-
-          // Alert
-          alert("⏰ Alarme: " + texto);
-
-          // Notificação do sistema
-          if ("Notification" in window && Notification.permission === "granted") {
-            new Notification("⏰ Compromisso", { body: texto });
-          }
-        }
-      });
+  // Se a tela está em HOJE, use os dados locais
+  let mudou = false;
+  for (let i=0;i<dadosDia.length;i++){
+    const c = dadosDia[i];
+    if (!c || !c.hora || !c.texto) continue;
+    if (!c.avisadoEm && c.hora === hhmmAtual) {
+      notificar(`Lembrete (${c.hora}): ${c.texto}`);
+      c.avisadoEm = Date.now();
+      mudou = true;
     }
-    setInterval(verificarAlarmes, 60000); // verifica a cada 1 minuto
-  </script>
-</body>
-</html>
+  }
+  if (mudou) salvarAgenda(true);
+}
