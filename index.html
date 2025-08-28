@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,60 +7,83 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 20px;
+      margin: 0; padding: 0;
+      background: #f4f4f9;
+    }
+    header {
+      background: #6200ea;
+      color: white;
+      padding: 10px;
+      text-align: center;
+    }
+    .container {
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
     }
     .compromisso {
-      display: block;
-      width: 100%;
-      margin: 4px 0;
-      padding: 6px;
+      display: flex;
+      margin-bottom: 5px;
     }
-    #resultadosPesquisa {
+    .compromisso input {
+      flex: 1;
+      padding: 8px;
+      margin-right: 5px;
+    }
+    .compromisso button {
+      padding: 8px;
+    }
+    #searchResults {
       margin-top: 10px;
+      background: white;
       border: 1px solid #ccc;
-      padding: 5px;
       display: none;
     }
-    #resultadosPesquisa div {
+    #searchResults div {
+      padding: 5px;
       cursor: pointer;
-      padding: 4px;
     }
-    #resultadosPesquisa div:hover {
+    #searchResults div:hover {
       background: #eee;
     }
-    #disquete {
+    #saveIcon {
       position: fixed;
       top: 10px;
       right: 10px;
-      font-size: 22px;
+      font-size: 24px;
       display: none;
-      animation: blink 1s linear infinite;
-    }
-    @keyframes blink {
-      50% { opacity: 0; }
     }
   </style>
 </head>
 <body>
-  <h1>Agenda do Fofo</h1>
+  <header>
+    <h1>Agenda do Fofo</h1>
+  </header>
 
-  <label for="data">Data:</label>
-  <input type="date" id="data"><br><br>
+  <div class="container">
+    <h3>Login</h3>
+    <input type="email" id="email" placeholder="Email"><br><br>
+    <input type="password" id="password" placeholder="Senha"><br><br>
+    <button onclick="login()">Login</button>
+    <button onclick="logout()">Logout</button>
 
-  <div id="compromissos"></div>
+    <h3>Pesquisar Compromissos</h3>
+    <input type="text" id="search" placeholder="Digite para pesquisar...">
+    <div id="searchResults"></div>
 
-  <br>
-  <label for="pesquisa">Pesquisar:</label>
-  <input type="text" id="pesquisa">
-  <div id="resultadosPesquisa"></div>
+    <h3>Compromissos de hoje</h3>
+    <div id="compromissos"></div>
+  </div>
 
-  <div id="disquete">💾</div>
+  <div id="saveIcon">💾</div>
 
-  <!-- Firebase -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+    // Import Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
+    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyBiikcagIm1p7wJG6DsHijkvdy1fpDBn8Y",
       authDomain: "bd-teste-c931c.firebaseapp.com",
@@ -72,134 +95,122 @@
     };
 
     const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
     const db = getDatabase(app);
 
-    const dataInput = document.getElementById("data");
+    // Login
+    window.login = function() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      signInWithEmailAndPassword(auth, email, password)
+        .then(() => alert("Logado com sucesso"))
+        .catch(err => alert("Erro: " + err.message));
+    };
+    window.logout = function() {
+      signOut(auth).then(() => alert("Logout efetuado"));
+    };
+
+    // Compromissos
     const compromissosDiv = document.getElementById("compromissos");
-    const pesquisaInput = document.getElementById("pesquisa");
-    const resultadosDiv = document.getElementById("resultadosPesquisa");
-    const disqueteIcon = document.getElementById("disquete");
+    const compromissos = [];
+    for (let i = 0; i < 15; i++) {
+      const div = document.createElement("div");
+      div.className = "compromisso";
+      const input = document.createElement("input");
+      input.placeholder = "Compromisso " + (i + 1) + " (hh:mm - texto)";
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          const next = compromissos[i + 1];
+          if (next) next.focus();
+        }
+      });
+      div.appendChild(input);
+      compromissos.push(input);
+      compromissosDiv.appendChild(div);
+    }
 
-    const totalCompromissos = 15;
+    // Autosave
+    function saveData() {
+      const user = auth.currentUser;
+      if (!user) return;
+      const data = compromissos.map(c => c.value);
+      set(ref(db, "agenda/" + user.uid), data);
 
-    // cria campos de compromisso
-    function gerarCampos() {
-      compromissosDiv.innerHTML = "";
-      for (let i = 1; i <= totalCompromissos; i++) {
-        let input = document.createElement("input");
-        input.type = "text";
-        input.className = "compromisso";
-        input.dataset.index = i;
-        input.placeholder = "Compromisso " + i;
+      // Ícone de disquete
+      const icon = document.getElementById("saveIcon");
+      icon.style.display = "block";
+      setTimeout(() => icon.style.display = "none", 1000);
+    }
+    setInterval(saveData, 5000);
 
-        // enter -> próximo compromisso
-        input.addEventListener("keydown", (e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            let next = compromissosDiv.querySelector(`input[data-index="${i+1}"]`);
-            if (next) next.focus();
+    // Carregar compromissos
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        get(ref(db, "agenda/" + user.uid)).then(snapshot => {
+          if (snapshot.exists()) {
+            const data = snapshot.val();
+            compromissos.forEach((c, i) => c.value = data[i] || "");
           }
         });
-
-        compromissosDiv.appendChild(input);
-      }
-    }
-
-    gerarCampos();
-
-    // carregar dados
-    async function carregar() {
-      if (!dataInput.value) return;
-      const dbRef = ref(db);
-      const snap = await get(child(dbRef, `agenda/${dataInput.value}`));
-      if (snap.exists()) {
-        let dados = snap.val();
-        compromissosDiv.querySelectorAll(".compromisso").forEach((input, i) => {
-          input.value = dados[i] || "";
-        });
-      } else {
-        compromissosDiv.querySelectorAll(".compromisso").forEach((input) => input.value = "");
-      }
-    }
-
-    // salvar dados
-    async function salvar() {
-      if (!dataInput.value) return;
-      let dados = [];
-      compromissosDiv.querySelectorAll(".compromisso").forEach(input => {
-        dados.push(input.value);
-      });
-      await set(ref(db, `agenda/${dataInput.value}`), dados);
-
-      // mostra ícone de disquete
-      disqueteIcon.style.display = "block";
-      setTimeout(() => {
-        disqueteIcon.style.display = "none";
-      }, 1000);
-    }
-
-    // auto salvar a cada 5s
-    setInterval(salvar, 5000);
-
-    dataInput.addEventListener("change", carregar);
-
-    // pesquisa
-    pesquisaInput.addEventListener("input", async () => {
-      let termo = pesquisaInput.value.trim();
-      if (termo.length < 4) {
-        resultadosDiv.style.display = "none";
-        return;
-      }
-      const dbRef = ref(db);
-      const snap = await get(child(dbRef, "agenda"));
-      resultadosDiv.innerHTML = "";
-      if (snap.exists()) {
-        let registros = snap.val();
-        for (let data in registros) {
-          registros[data].forEach((texto, i) => {
-            if (texto && texto.toLowerCase().includes(termo.toLowerCase())) {
-              let div = document.createElement("div");
-              div.textContent = `${data} - Compromisso ${i+1}: ${texto}`;
-              div.addEventListener("click", () => {
-                dataInput.value = data;
-                carregar();
-                resultadosDiv.style.display = "none";
-              });
-              resultadosDiv.appendChild(div);
-            }
-          });
-        }
-        resultadosDiv.style.display = "block";
       }
     });
 
-    // Notificações
-    if ("Notification" in window) {
-      if (Notification.permission !== "granted") {
-        Notification.requestPermission();
+    // Pesquisa global
+    document.getElementById("search").addEventListener("input", e => {
+      const q = e.target.value.toLowerCase();
+      const resultsDiv = document.getElementById("searchResults");
+      resultsDiv.innerHTML = "";
+      if (q.length < 4) {
+        resultsDiv.style.display = "none";
+        return;
       }
+      compromissos.forEach((c, i) => {
+        if (c.value.toLowerCase().includes(q)) {
+          const r = document.createElement("div");
+          r.textContent = c.value;
+          r.onclick = () => c.focus();
+          resultsDiv.appendChild(r);
+        }
+      });
+      resultsDiv.style.display = resultsDiv.children.length ? "block" : "none";
+    });
+
+    // ===== Alarme =====
+    const disparados = new Set();
+
+    // Pedir permissão de notificações
+    if ("Notification" in window && Notification.permission !== "granted") {
+      Notification.requestPermission();
     }
 
     function verificarAlarmes() {
-      if (!dataInput.value) return;
-      let hoje = new Date();
-      let horaAtual = hoje.getHours().toString().padStart(2,"0") + ":" +
-                      hoje.getMinutes().toString().padStart(2,"0");
+      const agora = new Date();
+      const horaAtual = agora.getHours().toString().padStart(2, "0") + ":" +
+                        agora.getMinutes().toString().padStart(2, "0");
 
-      compromissosDiv.querySelectorAll(".compromisso").forEach(input => {
-        if (input.value && input.value.includes(horaAtual)) {
-          // dispara notificação
-          if (Notification.permission === "granted") {
-            new Notification("⏰ Alarme", { body: input.value });
-          } else {
-            alert("⏰ " + input.value);
+      compromissos.forEach(c => {
+        if (!c.value) return;
+        const partes = c.value.split("-");
+        if (partes.length < 2) return;
+
+        const hora = partes[0].trim();
+        const texto = partes.slice(1).join("-").trim();
+
+        if (hora === horaAtual && !disparados.has(c)) {
+          disparados.add(c);
+
+          // Alert
+          alert("⏰ Alarme: " + texto);
+
+          // Notificação do sistema
+          if ("Notification" in window && Notification.permission === "granted") {
+            new Notification("⏰ Compromisso", { body: texto });
           }
         }
       });
     }
-
-    setInterval(verificarAlarmes, 60000); // checa a cada 1min
-
+    setInterval(verificarAlarmes, 60000); // verifica a cada 1 minuto
   </script>
 </body>
 </html>
